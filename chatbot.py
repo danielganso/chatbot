@@ -13,6 +13,7 @@ atendimentos_encerrados = {}
 respostas_orcamento = {}
 
 def send_message(phone, message):
+    """Envia uma mensagem de texto simples usando a Z-API."""
     url = f"{BASE_URL}/send-text"
     payload = {"phone": phone, "message": message}
     headers = {"Content-Type": "application/json", "Client-Token": "F90940ab202714a8d987298388bd01a72S"}
@@ -21,6 +22,7 @@ def send_message(phone, message):
     return response.json()
 
 def send_button_list(phone, message, buttons):
+    """Envia uma mensagem com botões interativos usando a Z-API."""
     url = f"{BASE_URL}/send-button-list"
     payload = {
         "phone": phone,
@@ -38,14 +40,17 @@ def webhook():
         data = request.json
         print(f"Payload completo recebido: {data}")
 
+        # Captura os campos necessários do JSON
         phone = data.get("phone")
         text = data.get("text", {}).get("message", "").strip()
-        button_id = data.get("buttonResponse", {}).get("id", "").strip()
+        button_id = data.get("buttonResponse", {}).get("id", "").strip()  # Captura o ID do botão clicado
         today = datetime.now().strftime("%Y-%m-%d")
 
+        # Valida que pelo menos `phone` e algum texto/botão foram recebidos
         if not phone or (not text and not button_id):
             return jsonify({"error": "Dados inválidos ou incompletos"}), 400
 
+        # Prioriza o ID do botão clicado
         if button_id:
             text = button_id
 
