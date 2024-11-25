@@ -49,6 +49,26 @@ def webhook():
         if button_id:
             text = button_id
 
+        # Estado: "aguardando_resposta_orcamento"
+        if estados_usuarios.get(phone) == "aguardando_resposta_orcamento":
+            if text:
+                # Armazena a resposta parcial do cliente
+                respostas_orcamento[phone] = respostas_orcamento.get(phone, "") + " " + text
+                estados_usuarios[phone] = "aguardando_confirmacao"
+                
+                # Envia os botões após a resposta do cliente
+                buttons = [
+                    {"id": "sim_concluir", "label": "Sim, Concluir"},
+                    {"id": "nao_enviando", "label": "Não, Ainda Estou Enviando"}
+                ]
+                send_button_list(
+                    phone,
+                    message="Já enviou todas as informações? Escolha uma opção:",
+                    buttons=buttons
+                )
+                return jsonify({"status": "success"}), 200
+
+        # Estado: "aguardando_confirmacao"
         if estados_usuarios.get(phone) == "aguardando_confirmacao":
             if text == "sim_concluir":
                 send_message(phone, "Obrigado pelas informações! Em breve você receberá seu orçamento. 😊")
@@ -71,6 +91,7 @@ def webhook():
                 send_message(phone, info_message)
                 return jsonify({"status": "success"}), 200
 
+        # Menu principal
         if text.lower() in ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite"]:
             welcome_message = (
                 "Olá, tudo bem?\n"
