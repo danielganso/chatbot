@@ -12,6 +12,7 @@ BASE_URL = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{INSTANCE_TOKEN}
 # Armazena o estado dos usuários
 estados_usuarios = {}
 atendimentos_encerrados = {}
+respostas_orcamento = {}
 
 def send_message(phone, message):
     """Envia uma mensagem de texto simples usando a Z-API."""
@@ -66,19 +67,41 @@ def webhook():
             return jsonify({"status": "ignored"}), 200
 
         # Gerenciamento de estados
-        if phone in estados_usuarios and estados_usuarios[phone] == "aguardando_orcamento":
+        if estados_usuarios.get(phone) == "aguardando_resposta_orcamento":
+            if text:
+                respostas_orcamento[phone] = respostas_orcamento.get(phone, "") + " " + text
+                estados_usuarios[phone] = "aguardando_confirmacao"
+                buttons = [
+                    {"id": "sim_concluir", "label": "Sim, Concluir"},
+                    {"id": "nao_enviando", "label": "Não, Ainda Estou Enviando"}
+                ]
+                send_button_list(
+                    phone,
+                    message="Já enviou todas as informações? Escolha uma opção:",
+                    buttons=buttons
+                )
+                return jsonify({"status": "success"}), 200
+
+        if estados_usuarios.get(phone) == "aguardando_confirmacao":
             if text.lower() == "sim_concluir":
-                send_message(phone, "Obrigado pelas informações! Logo você receberá seu orçamento! 😊")
-                estados_usuarios.pop(phone, None)  # Remove o estado do usuário
+                send_message(phone, "Obrigado pelas informações! Em breve você receberá seu orçamento. 😊")
+                estados_usuarios.pop(phone, None)
+                respostas_orcamento.pop(phone, None)
                 atendimentos_encerrados[phone] = today
                 return jsonify({"status": "success"}), 200
 
             elif text.lower() == "nao_enviando":
-                send_message(phone, "Favor enviar todas as informações de uma só vez para agilizar seu atendimento.")
-                return jsonify({"status": "success"}), 200
-
-            else:
-                send_message(phone, "Continuando o envio das informações. Envie mais detalhes ou clique em 'Sim Concluir' para finalizar.")
+                estados_usuarios[phone] = "aguardando_resposta_orcamento"
+                info_message = (
+                    "Preciso que me passe essas informações abaixo:\n"
+                    "- Seu nome;\n"
+                    "- Destino que quer o orçamento;\n"
+                    "- Data do orçamento;\n"
+                    "- Quantidade de pessoas (se tiver criança, preciso também da idade).\n\n"
+                    "Obs: Se for mais de um apartamento, informe a quantidade de pessoas e as idades das crianças para cada quarto! ✍️\n\n"
+                    "Informe todas as respostas em uma única mensagem, obrigado!"
+                )
+                send_message(phone, info_message)
                 return jsonify({"status": "success"}), 200
 
         # Menu principal
@@ -96,6 +119,7 @@ def webhook():
 
         # Opção 1 - Solicita informações para orçamento
         elif text == "1":
+            estados_usuarios[phone] = "aguardando_resposta_orcamento"
             info_message = (
                 "Preciso que me passe essas informações abaixo:\n"
                 "- Seu nome;\n"
@@ -105,17 +129,6 @@ def webhook():
                 "Obs: Se for mais de um apartamento, informe a quantidade de pessoas e as idades das crianças para cada quarto! ✍️"
             )
             send_message(phone, info_message)
-
-            buttons = [
-                {"id": "sim_concluir", "label": "Sim, Concluir"},
-                {"id": "nao_enviando", "label": "Não, Ainda Estou Enviando"}
-            ]
-            estados_usuarios[phone] = "aguardando_orcamento"
-            send_button_list(
-                phone,
-                message="Já enviou todas as informações? Escolha uma opção abaixo:",
-                buttons=buttons
-            )
 
         # Opção 2 - Envia o link do Instagram
         elif text == "2":
