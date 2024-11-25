@@ -22,7 +22,7 @@ def send_message(phone, message):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo valor do seu Client-Token
+        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo seu Client-Token
     }
     response = requests.post(url, json=payload, headers=headers)
     print(f"Resposta da API ao enviar mensagem: {response.json()}")  # Log para depuração
@@ -40,7 +40,7 @@ def send_button_list(phone, message, buttons):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo valor do seu Client-Token
+        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo seu Client-Token
     }
     response = requests.post(url, json=payload, headers=headers)
     print(f"Resposta da API ao enviar botões: {response.json()}")  # Log para depuração
@@ -90,22 +90,30 @@ def webhook():
                 "📌 *1* - Gostaria de um orçamento ✍️\n"
                 "📌 *2* - Quero saber promoções prontas ☑️\n"
                 "📌 *3* - Receber ofertas diretamente pelo WhatsApp 📨\n"
-                "📌 *4* - Falar com um atendente 👩‍💻\n\n"
-                "📌 *Falar com Atendente* - Caso prefira atendimento humano."
+                "📌 *4* - Falar com um atendente 👩‍💻"
             )
             send_message(phone, welcome_message)
 
         # Opção 1 - Solicita informações para orçamento
         elif text == "1":
+            info_message = (
+                "Preciso que me passe essas informações abaixo:\n"
+                "- Seu nome;\n"
+                "- Destino que quer o orçamento;\n"
+                "- Data do orçamento;\n"
+                "- Quantidade de pessoas (se tiver criança, preciso também da idade).\n\n"
+                "Obs: Se for mais de um apartamento, informe a quantidade de pessoas e as idades das crianças para cada quarto! ✍️"
+            )
+            send_message(phone, info_message)
+
             buttons = [
-                {"id": "sim_concluir", "title": "Sim, Concluir"},
-                {"id": "nao_enviando", "title": "Não, Ainda Estou Enviando"}
+                {"id": "sim_concluir", "label": "Sim, Concluir"},
+                {"id": "nao_enviando", "label": "Não, Ainda Estou Enviando"}
             ]
             estados_usuarios[phone] = "aguardando_orcamento"
-            send_interactive_buttons(
+            send_button_list(
                 phone,
-                header_text="Orçamento",
-                body_text="Já enviou todas as informações? Escolha uma opção abaixo:",
+                message="Já enviou todas as informações? Escolha uma opção abaixo:",
                 buttons=buttons
             )
 
@@ -147,6 +155,3 @@ import os
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Usa a porta definida pelo Render ou 5000 como fallback
     app.run(host='0.0.0.0', port=port)
-
-
-
