@@ -13,7 +13,6 @@ atendimentos_encerrados = {}
 respostas_orcamento = {}
 
 def send_message(phone, message):
-    """Envia uma mensagem de texto simples usando a Z-API."""
     url = f"{BASE_URL}/send-text"
     payload = {"phone": phone, "message": message}
     headers = {"Content-Type": "application/json", "Client-Token": "F90940ab202714a8d987298388bd01a72S"}
@@ -22,7 +21,6 @@ def send_message(phone, message):
     return response.json()
 
 def send_button_list(phone, message, buttons):
-    """Envia uma mensagem com botões interativos usando a Z-API."""
     url = f"{BASE_URL}/send-button-list"
     payload = {
         "phone": phone,
@@ -40,28 +38,28 @@ def webhook():
         data = request.json
         print(f"Payload completo recebido: {data}")
 
-        # Captura os campos necessários do JSON
         phone = data.get("phone")
         text = data.get("text", {}).get("message", "").strip()
-        button_id = data.get("buttonResponse", {}).get("id", "").strip()  # Captura o ID do botão clicado
+        button_id = data.get("buttonResponse", {}).get("id", "").strip()
         today = datetime.now().strftime("%Y-%m-%d")
 
-        # Valida que pelo menos `phone` e algum texto/botão foram recebidos
         if not phone or (not text and not button_id):
             return jsonify({"error": "Dados inválidos ou incompletos"}), 400
 
-        # Prioriza o ID do botão clicado
         if button_id:
             text = button_id
+
+        # Verifica se o atendimento já foi encerrado para este número no dia
+        if atendimentos_encerrados.get(phone) == today:
+            print(f"Atendimento encerrado para {phone} hoje. Ignorando mensagem.")
+            return jsonify({"status": "ignored"}), 200
 
         # Estado: "aguardando_resposta_orcamento"
         if estados_usuarios.get(phone) == "aguardando_resposta_orcamento":
             if text:
-                # Armazena a resposta parcial do cliente
                 respostas_orcamento[phone] = respostas_orcamento.get(phone, "") + " " + text
                 estados_usuarios[phone] = "aguardando_confirmacao"
                 
-                # Envia os botões após a resposta do cliente
                 buttons = [
                     {"id": "sim_concluir", "label": "Sim, Concluir"},
                     {"id": "nao_enviando", "label": "Não, Ainda Estou Enviando"}
@@ -108,8 +106,10 @@ def webhook():
                 "📌 *4* - Falar com um atendente 👩‍💻"
             )
             send_message(phone, welcome_message)
+            return jsonify({"status": "success"}), 200
 
-        elif text == "1":
+        # Opção 1 - Solicitar informações para orçamento
+        if text == "1":
             estados_usuarios[phone] = "aguardando_resposta_orcamento"
             info_message = (
                 "Preciso que me passe essas informações abaixo:\n"
@@ -120,7 +120,35 @@ def webhook():
                 "Obs: Se for mais de um apartamento, informe a quantidade de pessoas e as idades das crianças para cada quarto! ✍️"
             )
             send_message(phone, info_message)
+            return jsonify({"status": "success"}), 200
 
+        # Opção 2 - Enviar link do Instagram
+        if text == "2":
+            option_2_message = (
+                "Dá uma olhada no nosso destaque do Instagram 👇\n"
+                "(Incluir aqui o link do destaque)\n\n"
+                "Estamos sempre atualizando, mas confirme disponibilidade, pois a rotatividade é grande!"
+            )
+            send_message(phone, option_2_message)
+            return jsonify({"status": "success"}), 200
+
+        # Opção 3 - Adicionar à lista de transmissão
+        if text == "3":
+            option_3_message = (
+                "Já iremos adicionar seu número à nossa lista de transmissão!\n\n"
+                "Por favor, adicione nosso contato à sua agenda para receber as ofertas diretamente pelo WhatsApp! 😄✈️"
+            )
+            send_message(phone, option_3_message)
+            return jsonify({"status": "success"}), 200
+
+        # Opção 4 - Falar com atendente
+        if text == "4" or text.lower() == "falar com atendente":
+            atendimentos_encerrados[phone] = today
+            send_message(phone, "Um atendente irá falar com você. O chatbot está encerrado para hoje.")
+            return jsonify({"status": "success"}), 200
+
+        # Mensagem padrão para entradas inválidas
+        send_message(phone, "Desculpe, não entendi sua mensagem. Por favor, escolha uma das opções enviando o número correspondente (1, 2, 3 ou 4).")
         return jsonify({"status": "success"}), 200
 
     except Exception as e:
