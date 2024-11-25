@@ -28,22 +28,15 @@ def send_message(phone, message):
     print(f"Resposta da API ao enviar mensagem: {response.json()}")  # Log para depuração
     return response.json()
 
-def send_interactive_buttons(phone, header_text, body_text, buttons):
-    """Envia uma mensagem interativa com botões usando a Z-API."""
-    url = f"{BASE_URL}/send-buttons"
+def send_button_list(phone, message, buttons):
+    """Envia uma mensagem com botões interativos usando a Z-API."""
+    url = f"{BASE_URL}/send-button-list"
     payload = {
         "phone": phone,
-        "header": {
-            "type": "text",
-            "text": header_text
-        },
-        "body": {
-            "text": body_text
-        },
-        "footer": {
-            "text": "Escolha uma das opções abaixo:"
-        },
-        "buttons": buttons
+        "message": message,
+        "buttonList": {
+            "buttons": buttons
+        }
     }
     headers = {
         "Content-Type": "application/json",
