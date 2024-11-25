@@ -14,7 +14,7 @@ estados_usuarios = {}
 atendimentos_encerrados = {}
 
 def send_message(phone, message):
-    """Envia uma mensagem usando a Z-API."""
+    """Envia uma mensagem de texto simples usando a Z-API."""
     url = f"{BASE_URL}/send-text"
     payload = {
         "phone": phone,
@@ -22,10 +22,35 @@ def send_message(phone, message):
     }
     headers = {
         "Content-Type": "application/json",
-        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo valor completo do seu Client-Token
+        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo valor do seu Client-Token
     }
     response = requests.post(url, json=payload, headers=headers)
     print(f"Resposta da API ao enviar mensagem: {response.json()}")  # Log para depuração
+    return response.json()
+
+def send_interactive_buttons(phone, header_text, body_text, buttons):
+    """Envia uma mensagem interativa com botões usando a Z-API."""
+    url = f"{BASE_URL}/send-buttons"
+    payload = {
+        "phone": phone,
+        "header": {
+            "type": "text",
+            "text": header_text
+        },
+        "body": {
+            "text": body_text
+        },
+        "footer": {
+            "text": "Escolha uma das opções abaixo:"
+        },
+        "buttons": buttons
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Client-Token": "F90940ab202714a8d987298388bd01a72S"  # Substitua pelo valor do seu Client-Token
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    print(f"Resposta da API ao enviar botões: {response.json()}")  # Log para depuração
     return response.json()
 
 @app.route('/webhook', methods=['POST'])
@@ -47,15 +72,15 @@ def webhook():
             print(f"Atendimento encerrado para {phone} hoje. Ignorando mensagem.")
             return jsonify({"status": "ignored"}), 200
 
-        # Resposta inicial do chatbot
+        # Gerenciamento de estados
         if phone in estados_usuarios and estados_usuarios[phone] == "aguardando_orcamento":
-            if text.lower() == "sim concluir":
+            if text.lower() == "sim_concluir":
                 send_message(phone, "Obrigado pelas informações! Logo você receberá seu orçamento! 😊")
                 estados_usuarios.pop(phone, None)  # Remove o estado do usuário
                 atendimentos_encerrados[phone] = today
                 return jsonify({"status": "success"}), 200
 
-            elif text.lower() == "não ainda estou enviando":
+            elif text.lower() == "nao_enviando":
                 send_message(phone, "Favor enviar todas as informações de uma só vez para agilizar seu atendimento.")
                 return jsonify({"status": "success"}), 200
 
@@ -63,7 +88,8 @@ def webhook():
                 send_message(phone, "Continuando o envio das informações. Envie mais detalhes ou clique em 'Sim Concluir' para finalizar.")
                 return jsonify({"status": "success"}), 200
 
-        elif text.lower() in ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite"]:
+        # Menu principal
+        if text.lower() in ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite"]:
             welcome_message = (
                 "Olá, tudo bem?\n"
                 "Que prazer te ter por aqui! 🤩\n\n"
@@ -76,20 +102,21 @@ def webhook():
             )
             send_message(phone, welcome_message)
 
+        # Opção 1 - Solicita informações para orçamento
         elif text == "1":
-            option_1_message = (
-                "Por favor, envie as seguintes informações para o orçamento:\n"
-                "- Seu nome;\n"
-                "- Destino que quer o orçamento;\n"
-                "- Data do orçamento;\n"
-                "- Quantidade de pessoas (se houver crianças, inclua as idades).\n\n"
-                "Após enviar todas as informações, clique no botão abaixo:\n\n"
-                "📌 *Sim Concluir* - Para finalizar o envio das informações.\n"
-                "📌 *Não Ainda Estou Enviando* - Se precisar enviar mais detalhes."
-            )
+            buttons = [
+                {"id": "sim_concluir", "title": "Sim, Concluir"},
+                {"id": "nao_enviando", "title": "Não, Ainda Estou Enviando"}
+            ]
             estados_usuarios[phone] = "aguardando_orcamento"
-            send_message(phone, option_1_message)
+            send_interactive_buttons(
+                phone,
+                header_text="Orçamento",
+                body_text="Já enviou todas as informações? Escolha uma opção abaixo:",
+                buttons=buttons
+            )
 
+        # Opção 2 - Envia o link do Instagram
         elif text == "2":
             option_2_message = (
                 "Dá uma olhada no nosso destaque do Instagram 👇\n"
@@ -98,6 +125,7 @@ def webhook():
             )
             send_message(phone, option_2_message)
 
+        # Opção 3 - Adiciona à lista de transmissão
         elif text == "3":
             option_3_message = (
                 "Já iremos adicionar seu número à nossa lista de transmissão!\n\n"
@@ -105,6 +133,7 @@ def webhook():
             )
             send_message(phone, option_3_message)
 
+        # Opção 4 ou "Falar com Atendente"
         elif text == "4" or text.lower() == "falar com atendente":
             atendimentos_encerrados[phone] = today
             send_message(phone, "Um atendente irá falar com você. O chatbot está encerrado para hoje.")
@@ -125,5 +154,6 @@ import os
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Usa a porta definida pelo Render ou 5000 como fallback
     app.run(host='0.0.0.0', port=port)
+
 
 
