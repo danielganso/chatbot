@@ -3,3 +3,17 @@ OFDB.js:3
 
 
 superfeira.intranet.bb.com.br/:1  Refused to execute script from 'https://superfeira.intranet.bb.com.br/api/auth-manager.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
+hostname = login.intranet.bb.com.br
+init_ofd.js:17 dominio = intranet
+init_ofd.js:23 OFD - Prod
+init_ofd.js:26 url = https://bbfc.dnofd.com/ofdb/OFDB.js 
+init_ofd.js:29 client = bbfc
+OFDB.js:3 ReferenceError
+ofd.js:2 sessionId = 6acf39170b926fd5189e28d9da0144b7cd6e11a7b63d3f1c3abc3adb5e2f4eae
+apibiometria-v2.js:426 GSL: dns resolvido para plataforma.int -> https://plataforma.int:7443/acr-gsl-bio/api/v1/ImpressaoDigital
+apibiometria.js:428 GSL: dns resolvido para plataforma.int -> https://plataforma.int:7443/acr-gsl-bio/api/v1/ImpressaoDigital
+favicon.ico:1 
+            
+            
+           GET https://login.intranet.bb.com.br/favicon.ico 403 (Forbidden)Understand this error
+OFDB.js:3 WebSocket connection to 'wss://127.0.0.1:30900/' failed: 
