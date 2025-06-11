@@ -1,19 +1,15 @@
-OFDB.js:3 
- WebSocket connection to 'wss://127.0.0.1:30900/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED
-
-
-superfeira.intranet.bb.com.br/:1  Refused to execute script from 'https://superfeira.intranet.bb.com.br/api/auth-manager.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
-hostname = login.intranet.bb.com.br
-init_ofd.js:17 dominio = intranet
-init_ofd.js:23 OFD - Prod
-init_ofd.js:26 url = https://bbfc.dnofd.com/ofdb/OFDB.js 
-init_ofd.js:29 client = bbfc
-OFDB.js:3 ReferenceError
-ofd.js:2 sessionId = 6acf39170b926fd5189e28d9da0144b7cd6e11a7b63d3f1c3abc3adb5e2f4eae
-apibiometria-v2.js:426 GSL: dns resolvido para plataforma.int -> https://plataforma.int:7443/acr-gsl-bio/api/v1/ImpressaoDigital
-apibiometria.js:428 GSL: dns resolvido para plataforma.int -> https://plataforma.int:7443/acr-gsl-bio/api/v1/ImpressaoDigital
-favicon.ico:1 
-            
-            
-           GET https://login.intranet.bb.com.br/favicon.ico 403 (Forbidden)Understand this error
-OFDB.js:3 WebSocket connection to 'wss://127.0.0.1:30900/' failed: 
+0|superfei |     at listenInCluster (node:net:1996:12)
+0|superfei |     at Server.listen (node:net:2101:7)
+0|superfei |     at Function.listen (C:\workspace\devSuperfsa\node_modules\express\lib\application.js:635:24)
+0|superfei |     at Object.<anonymous> (C:\workspace\devSuperfsa\dist\api\server.js:307:5)
+0|superfei |     at Module._compile (node:internal/modules/cjs/loader:1730:14)
+0|superfei |     at Object..js (node:internal/modules/cjs/loader:1895:10)
+0|superfei |     at Module.load (node:internal/modules/cjs/loader:1465:32)
+0|superfei |     at Function._load (node:internal/modules/cjs/loader:1282:12)
+0|superfei |     at Object.<anonymous> (C:\Users\f2251827\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23) {
+0|superfei |   code: 'EADDRINUSE',
+0|superfei |   errno: -4091,
+0|superfei |   syscall: 'listen',
+0|superfei |   address: '::',
+0|superfei |   port: 3000
+0|superfei | }
