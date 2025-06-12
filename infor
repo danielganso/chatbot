@@ -1,109 +1,27 @@
-Erro no callback OAuth2: {
-  error_description: 'The provided access grant is invalid, expired, or revoked.',
-  error: 'invalid_grant'
-
-Request URL
-https://superfeira.intranet.bb.com.br/auth/callback/bb?code=gPcQTwh1ns9jMkNck1TGpIJJZIk&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
-Request Method
-GET
-Status Code
-302 Found
-Remote Address
-10.2.99.16:443
-Referrer Policy
-strict-origin-when-cross-origin
-
-Request URL
-https://superfeira.intranet.bb.com.br/
-Request Method
-GET
-Status Code
-302 Found
-Remote Address
-10.2.99.16:443
-Referrer Policy
-strict-origin-when-cross-origin
-
-Request URL
-https://superfeira.intranet.bb.com.br/auth/callback/bb?code=55Kep4YnxXVkFbQlB_eeQC2vouI&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
-Request Method
-GET
-Status Code
-500 Internal Server Error
-Remote Address
-10.2.99.16:443
-Referrer Policy
-strict-origin-when-cross-origin
-
-superfeira.intranet.bb.com.br redirected you too many times.
-
-Erro no callback: error:1E08010C:DECODER routines::unsupported
-
-openssl pkcs12 -in seu_certificado.pfx -nocerts -out chave.key -nodes
-openssl pkcs12 -in seu_certificado.pfx -clcerts -nokeys -out certificado.crt
-
-res.cookie('session', sessionToken, { httpOnly: true, secure: true });
-res.redirect('/');
-
-
-Request URL
-https://superfeira.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback&scope=bbprofile
-Request Method
-GET
-Status Code
-302 Found
-Remote Address
-10.2.99.16:443
-Referrer Policy
-strict-origin-when-cross-origin
-
+WEB CONFIG Q FUNCIONA 
 <configuration>
-  <system.webServer>
-    <rewrite>
-      <rules>
-        <rule name="ReverseProxyToNode" stopProcessing="true">
-          <match url=".*" />
-          <conditions logicalGrouping="MatchAll">
-            <!-- Só proxyar se não for um arquivo físico -->
-            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-            <!-- Só proxyar se não for uma pasta física -->
-            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-          </conditions>
-          <action type="Rewrite" url="http://localhost:3000/{R:1}" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
+<system.webServer>
+  <rewrite>
+    <rules>
+      <rule name="ReverseProxyInboundRule1" stopProcessing="true">
+        <match url="(.*)" />
+        <action type="Rewrite" url="http://localhost:3000/{R:1}" />
+      </rule>
+    </rules>
+    <outboundRules>
+      <rule name="ReverseProxyOutboundRule1" preCondition="ResponseIsRedirect">
+        <match serverVariable="RESPONSE_Location" pattern="^http(s)?://superfeira.intranet.bb.com.br(.*)" />
+        <action type="Rewrite" value="http{R:1}://login.intranet.bb.com.br{R:2}" />
+      </rule>
+      <preConditions>
+        <preCondition name="ResponseIsRedirect">
+          <add input="{RESPONSE_STATUS}" pattern="3.." />
+        </preCondition>
+      </preConditions>
+    </outboundRules>
+  </rewrite>
+</system.webServer>
 </configuration>
-
-<configuration>
-  <system.webServer>
-    <rewrite>
-      <rules>
-        <rule name="ReverseProxyToNode" stopProcessing="true">
-          <match url="(.*)" />
-          <action type="Rewrite" url="http://localhost:3000/{R:1}" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
-</configuration>
-
-https://superfeira.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback&scope=bbprofile
-
-// test-server.js
-const express = require('express');
-const app = express();
-const PORT = 3000;
-
-app.get('*', (req, res) => {
-  res.send(`🚀 Está funcionando! Rota acessada: ${req.originalUrl}`);
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor de teste rodando em http://localhost:${PORT}`);
-});
-
 
 1111111111111111111111111111111111111
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // <--- IGNORA O CERTIFICADO
