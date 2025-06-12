@@ -1,22 +1,37 @@
+Erro no callback OAuth2: {
+  error_description: 'The provided access grant is invalid, expired, or revoked.',
+  error: 'invalid_grant'
+
 Request URL
-https://login.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback%2Fbb&scope=bbprofile
+https://superfeira.intranet.bb.com.br/auth/callback/bb?code=gPcQTwh1ns9jMkNck1TGpIJJZIk&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
 Request Method
 GET
 Status Code
 302 Found
 Remote Address
-172.17.78.118:443
+10.2.99.16:443
 Referrer Policy
 strict-origin-when-cross-origin
 
 Request URL
-https://login.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback%2Fbb&scope=bbprofile
+https://superfeira.intranet.bb.com.br/
 Request Method
 GET
 Status Code
 302 Found
 Remote Address
-172.17.78.118:443
+10.2.99.16:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+Request URL
+https://superfeira.intranet.bb.com.br/auth/callback/bb?code=55Kep4YnxXVkFbQlB_eeQC2vouI&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
+Request Method
+GET
+Status Code
+500 Internal Server Error
+Remote Address
+10.2.99.16:443
 Referrer Policy
 strict-origin-when-cross-origin
 
