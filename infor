@@ -82,7 +82,7 @@ app.listen(PORT, () => {
 
 
 1111111111111111111111111111111111111
-
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // <--- IGNORA O CERTIFICADO
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
