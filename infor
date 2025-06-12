@@ -1,15 +1,15 @@
-0|superfei |     at listenInCluster (node:net:1996:12)
-0|superfei |     at Server.listen (node:net:2101:7)
-0|superfei |     at Function.listen (C:\workspace\devSuperfsa\node_modules\express\lib\application.js:635:24)
-0|superfei |     at Object.<anonymous> (C:\workspace\devSuperfsa\dist\api\server.js:307:5)
+0|superfei | Require stack:
+0|superfei | - c:\workspace\devSuperfsa\server.js
+0|superfei |     at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+0|superfei |     at Hook._require.Module.require (C:\Users\f2251827\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
+0|superfei |     at require (node:internal/modules/helpers:135:16)
+0|superfei |     at Object.<anonymous> (c:\workspace\devSuperfsa\server.js:4:23)
 0|superfei |     at Module._compile (node:internal/modules/cjs/loader:1730:14)
 0|superfei |     at Object..js (node:internal/modules/cjs/loader:1895:10)
 0|superfei |     at Module.load (node:internal/modules/cjs/loader:1465:32)
 0|superfei |     at Function._load (node:internal/modules/cjs/loader:1282:12)
-0|superfei |     at Object.<anonymous> (C:\Users\f2251827\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23) {
-0|superfei |   code: 'EADDRINUSE',
-0|superfei |   errno: -4091,
-0|superfei |   syscall: 'listen',
-0|superfei |   address: '::',
-0|superfei |   port: 3000
+0|superfei |     at Object.<anonymous> (C:\Users\f2251827\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
+0|superfei |     at Module._compile (node:internal/modules/cjs/loader:1730:14) {
+0|superfei |   code: 'MODULE_NOT_FOUND',
+0|superfei |   requireStack: [ 'c:\\workspace\\devSuperfsa\\server.js' ]
 0|superfei | }
