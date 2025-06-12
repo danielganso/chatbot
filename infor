@@ -30,18 +30,22 @@ WEB CONFIG Q FUNCIONA
   <system.webServer>
     <rewrite>
       <rules>
+        <!-- Encaminha tudo para o Node.js local -->
         <rule name="ReverseProxyInboundRule1" stopProcessing="true">
           <match url="(.*)" />
           <action type="Rewrite" url="http://localhost:3000/{R:1}" />
         </rule>
       </rules>
+
       <outboundRules>
-        <rule name="RewriteOnlyBBRedirects" preCondition="ResponseIsRedirect">
+        <!-- Reescreve apenas os redirecionamentos que apontam de volta para login.bb.com.br -->
+        <rule name="FixOnlyLoginRedirects" preCondition="IsRedirect">
           <match serverVariable="RESPONSE_Location" pattern="^http(s)?://login\.intranet\.bb\.com\.br(.*)" />
           <action type="Rewrite" value="http{R:1}://login.intranet.bb.com.br{R:2}" />
         </rule>
+
         <preConditions>
-          <preCondition name="ResponseIsRedirect">
+          <preCondition name="IsRedirect">
             <add input="{RESPONSE_STATUS}" pattern="3.." />
           </preCondition>
         </preConditions>
@@ -49,6 +53,7 @@ WEB CONFIG Q FUNCIONA
     </rewrite>
   </system.webServer>
 </configuration>
+
 
 =========================
 1111111111111111111111111111111111111
