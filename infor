@@ -1,20 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
   <system.webServer>
     <rewrite>
       <rules>
-        <rule name="ProxyToNode" stopProcessing="true">
-          <match url="^(auth/callback|)$" /> 
-          <!-- aqui você lista as rotas da sua app que ficam no Node -->
-          <action type="Rewrite" url="http://localhost:3000/{R:0}" />
-        </rule>
-        <rule name="StaticFiles" stopProcessing="true">
-          <match url="^(css|js|img|fonts)/.*" />
-          <action type="Rewrite" url="http://localhost:3000/{R:0}" />
+        <rule name="ReverseProxyInboundRule1" stopProcessing="true">
+          <match url="(.*)" />
+          <action type="Rewrite" url="http://localhost:3000/{R:1}" />
         </rule>
       </rules>
     </rewrite>
+
+    <proxy enabled="true" />
+    <httpProtocol>
+      <customHeaders>
+        <add name="X-Forwarded-Proto" value="https" />
+      </customHeaders>
+    </httpProtocol>
   </system.webServer>
 </configuration>
+
 
 
 Detailed Error Information:
