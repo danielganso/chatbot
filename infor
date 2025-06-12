@@ -191,3 +191,118 @@ app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 
+
+
+
+=================================================================================================================================================
+
+
+const express = require('express');
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
+const https = require('https');
+const cookieSession = require('cookie-session');
+require('dotenv').config();
+
+const app = express();
+const PORT = 3000;
+
+// Permite o Express funcionar corretamente atrás do IIS (evita erro no hostname)
+app.set('trust proxy', true);
+
+// ======= CONFIGURAÇÕES =========
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+
+const AUTH_BASE_URL = 'https://login.intranet.bb.com.br';
+const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
+const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
+const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
+
+// ======= AGENTE HTTPS COM CERTIFICADO =========
+const agenteHttps = new https.Agent({
+  ca: fs.readFileSync(path.join(__dirname, 'certs', 'cadeia-bb.pem')),
+});
+
+// ======= SESSÃO VIA COOKIE ========
+app.use(
+  cookieSession({
+    name: 'session',
+    keys: ['chave-super-secreta-aqui'],
+    maxAge: 24 * 60 * 60 * 1000, // 1 dia
+    secure: true,
+    sameSite: 'lax',
+  })
+);
+
+// ======= ROTA PRINCIPAL ===========
+app.get('/', async (req, res) => {
+  if (req.session?.user) {
+    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  }
+
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  return res.redirect(authUrl);
+});
+
+// ======= CALLBACK DO OAUTH2 =========
+app.get('/auth/callback', async (req, res) => {
+  const code = req.query.code;
+
+  if (!code) {
+    return res.status(400).send('Código de autenticação ausente.');
+  }
+
+  try {
+    const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+
+    const tokenResponse = await axios.post(
+      TOKEN_URL,
+      new URLSearchParams({
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: REDIRECT_URI,
+      }),
+      {
+        headers: {
+          Authorization: `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        httpsAgent: agenteHttps, // <- Usando o certificado aqui
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const userInfo = await axios.get(USERINFO_URL, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      httpsAgent: agenteHttps, // <- Também aqui
+    });
+
+    req.session.user = userInfo.data;
+
+    return res.redirect('/');
+  } catch (error) {
+    console.error('Erro no callback:', error.response?.data || error.message);
+    return res.status(500).send('Erro na autenticação OAuth2.');
+  }
+});
+
+// ======= BLOQUEIA ACESSOS SEM LOGIN =======
+app.use((req, res, next) => {
+  if (req.session?.user) return next();
+
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  return res.redirect(authUrl);
+});
+
+// ======= SERVE OS ARQUIVOS ESTÁTICOS =========
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// ======= INICIA O SERVIDOR =========
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
+
