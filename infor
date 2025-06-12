@@ -1,18 +1,26 @@
-0|superfei | Require stack:
-0|superfei | - c:\workspace\devSuperfsa\server.js
-0|superfei |     at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
-0|superfei |     at Hook._require.Module.require (C:\Users\f2251827\AppData\Roaming\npm\node_modules\pm2\node_modules\require-in-the-middle\index.js:81:25)
-0|superfei |     at require (node:internal/modules/helpers:135:16)
-0|superfei |     at Object.<anonymous> (c:\workspace\devSuperfsa\server.js:4:23)
-0|superfei |     at Module._compile (node:internal/modules/cjs/loader:1730:14)
-0|superfei |     at Object..js (node:internal/modules/cjs/loader:1895:10)
-0|superfei |     at Module.load (node:internal/modules/cjs/loader:1465:32)
-0|superfei |     at Function._load (node:internal/modules/cjs/loader:1282:12)
-0|superfei |     at Object.<anonymous> (C:\Users\f2251827\AppData\Roaming\npm\node_modules\pm2\lib\ProcessContainerFork.js:33:23)
-0|superfei |     at Module._compile (node:internal/modules/cjs/loader:1730:14) {
-0|superfei |   code: 'MODULE_NOT_FOUND',
-0|superfei |   requireStack: [ 'c:\\workspace\\devSuperfsa\\server.js' ]
-0|superfei | }
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="SPA Routing" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/index.html" />
+        </rule>
+      </rules>
+    </rewrite>
+
+      <defaultDocument>
+      <files>
+        <clear />
+        <add value="index.html" />
+      </files>
+    </defaultDocument>
+  </system.webServer>
+</configuration>
 
 
 <configuration>
