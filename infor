@@ -42,3 +42,37 @@ res.redirect(authUrl);
 
 
 https://superfeira.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback&scope=bbprofile
+
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="ProxyNode" stopProcessing="true">
+          <match url="^(auth|api|static|css|js|img|dist)/.*" />
+          <action type="Rewrite" url="http://localhost:3000/{R:0}" />
+        </rule>
+      </rules>
+    </rewrite>
+
+
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="ReverseProxyToNode" stopProcessing="true">
+          <match url=".*" />
+          <conditions>
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="http://localhost:3000/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
+
+  </system.webServer>
+</configuration>
+
+
