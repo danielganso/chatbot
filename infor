@@ -36,5 +36,9 @@
   </system.webServer>
 </configuration>
 
+const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+console.log('Redirecionando para:', authUrl);
+res.redirect(authUrl);
+
 
 https://superfeira.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback&scope=bbprofile
