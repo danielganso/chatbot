@@ -59,4 +59,5 @@ Logon User	   Anonymous
   </system.webServer>
 </configuration>
 
+https://superfeira.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback&scope=bbprofile
 
