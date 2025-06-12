@@ -19,7 +19,7 @@
     </outboundRules>
   </rewrite>
 </system.webServer>
-
+Erro no callback: error:1E08010C:DECODER routines::unsupported
 
 
 Request URL
