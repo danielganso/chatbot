@@ -26,3 +26,23 @@ Requested URL	   https://superfeira.intranet.bb.com.br:443/sso/oauth2/authorize?
 Physical Path	   C:\workspace\devSuperfsa\sso\oauth2\authorize
 Logon Method	   Anonymous
 Logon User	   Anonymous
+
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="ReverseProxyToNode" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <!-- Só proxyar se não for um arquivo físico -->
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <!-- Só proxyar se não for uma pasta física -->
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="http://localhost:3000/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
+
