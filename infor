@@ -200,18 +200,23 @@ app.listen(PORT, () => {
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-const fs = require('fs');
-const https = require('https');
 const cookieSession = require('cookie-session');
+const https = require('https');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 const PORT = 3000;
 
-// Permite o Express funcionar corretamente atrás do IIS (evita erro no hostname)
-app.set('trust proxy', true);
+// ===== HTTPS AGENT COM CERTIFICADO CLIENTE =====
+const agenteHttps = new https.Agent({
+  cert: fs.readFileSync(path.join(__dirname, 'certs', 'certificado.crt')), // certificado cliente
+  key: fs.readFileSync(path.join(__dirname, 'certs', 'chave.key')),         // chave privada
+  ca: fs.readFileSync(path.join(__dirname, 'certs', 'cadeia-bb.pem')),      // cadeia de confiança do BB (opcional)
+  rejectUnauthorized: true, // garante que o certificado do servidor também é verificado
+});
 
-// ======= CONFIGURAÇÕES =========
+// ===== VARIÁVEIS DO .ENV =====
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
@@ -221,12 +226,10 @@ const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
 const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
 const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
 
-// ======= AGENTE HTTPS COM CERTIFICADO =========
-const agenteHttps = new https.Agent({
-  ca: fs.readFileSync(path.join(__dirname, 'certs', 'cadeia-bb.pem')),
-});
+// ===== CONFIGURAÇÕES =====
+app.set('trust proxy', true);
 
-// ======= SESSÃO VIA COOKIE ========
+// ===== SESSÃO VIA COOKIE =====
 app.use(
   cookieSession({
     name: 'session',
@@ -237,23 +240,22 @@ app.use(
   })
 );
 
-// ======= ROTA PRINCIPAL ===========
+// ===== ROTA PRINCIPAL =====
 app.get('/', async (req, res) => {
   if (req.session?.user) {
     return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   }
 
-  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&scope=bbprofile`;
   return res.redirect(authUrl);
 });
 
-// ======= CALLBACK DO OAUTH2 =========
+// ===== CALLBACK OAUTH2 =====
 app.get('/auth/callback', async (req, res) => {
   const code = req.query.code;
-
-  if (!code) {
-    return res.status(400).send('Código de autenticação ausente.');
-  }
+  if (!code) return res.status(400).send('Código de autenticação ausente.');
 
   try {
     const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
@@ -270,7 +272,7 @@ app.get('/auth/callback', async (req, res) => {
           Authorization: `Basic ${authHeader}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        httpsAgent: agenteHttps, // <- Usando o certificado aqui
+        httpsAgent: agenteHttps,
       }
     );
 
@@ -278,7 +280,7 @@ app.get('/auth/callback', async (req, res) => {
 
     const userInfo = await axios.get(USERINFO_URL, {
       headers: { Authorization: `Bearer ${accessToken}` },
-      httpsAgent: agenteHttps, // <- Também aqui
+      httpsAgent: agenteHttps,
     });
 
     req.session.user = userInfo.data;
@@ -290,18 +292,20 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
-// ======= BLOQUEIA ACESSOS SEM LOGIN =======
+// ===== BLOQUEIO DE ACESSOS SEM LOGIN =====
 app.use((req, res, next) => {
   if (req.session?.user) return next();
 
-  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&scope=bbprofile`;
   return res.redirect(authUrl);
 });
 
-// ======= SERVE OS ARQUIVOS ESTÁTICOS =========
+// ===== SERVE ARQUIVOS ESTÁTICOS =====
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// ======= INICIA O SERVIDOR =========
+// ===== INICIA O SERVIDOR =====
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
