@@ -13,3 +13,17 @@
 0|superfei |   code: 'MODULE_NOT_FOUND',
 0|superfei |   requireStack: [ 'c:\\workspace\\devSuperfsa\\server.js' ]
 0|superfei | }
+
+
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="ReverseProxyToNode" stopProcessing="true">
+          <match url="(.*)" />
+          <action type="Rewrite" url="http://localhost:3000/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
