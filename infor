@@ -226,6 +226,14 @@ const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
 const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
 const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
 
+// ===== HTTPS AGENT COM CERTIFICADO CLIENTE =====
+const agenteHttps = new https.Agent({
+  cert: fs.readFileSync(path.join(__dirname, 'certs', 'certificado.crt')), // certificado cliente
+  key: fs.readFileSync(path.join(__dirname, 'certs', 'chave.key')),         // chave privada
+  ca: fs.readFileSync(path.join(__dirname, 'certs', 'cadeia-bb.pem')),      // cadeia de confiança do BB (opcional)
+  rejectUnauthorized: true, // garante que o certificado do servidor também é verificado
+});
+
 // ======= CONFIGURAÇÃO DE COOKIE DE SESSÃO =========
 app.use(
   cookieSession({
