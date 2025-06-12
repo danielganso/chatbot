@@ -61,6 +61,18 @@ Logon User	   Anonymous
 
 https://superfeira.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback&scope=bbprofile
 
+// test-server.js
+const express = require('express');
+const app = express();
+const PORT = 3000;
+
+app.get('*', (req, res) => {
+  res.send(`🚀 Está funcionando! Rota acessada: ${req.originalUrl}`);
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor de teste rodando em http://localhost:${PORT}`);
+});
 
 
 1111111111111111111111111111111111111
