@@ -27,6 +27,8 @@ Erro no callback: error:1E08010C:DECODER routines::unsupported
 openssl pkcs12 -in seu_certificado.pfx -nocerts -out chave.key -nodes
 openssl pkcs12 -in seu_certificado.pfx -clcerts -nokeys -out certificado.crt
 
+res.cookie('session', sessionToken, { httpOnly: true, secure: true });
+res.redirect('/');
 
 
 Request URL
@@ -202,28 +204,19 @@ app.listen(PORT, () => {
 
 
 =================================================================================================================================================
-
-
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const cookieSession = require('cookie-session');
-const https = require('https');
-const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 const PORT = 3000;
 
-// ===== HTTPS AGENT COM CERTIFICADO CLIENTE =====
-const agenteHttps = new https.Agent({
-  cert: fs.readFileSync(path.join(__dirname, 'certs', 'certificado.crt')), // certificado cliente
-  key: fs.readFileSync(path.join(__dirname, 'certs', 'chave.key')),         // chave privada
-  ca: fs.readFileSync(path.join(__dirname, 'certs', 'cadeia-bb.pem')),      // cadeia de confiança do BB (opcional)
-  rejectUnauthorized: true, // garante que o certificado do servidor também é verificado
-});
+// Permite o Express funcionar atrás do IIS corretamente
+app.set('trust proxy', true);
 
-// ===== VARIÁVEIS DO .ENV =====
+// ======= CONFIGURAÇÕES DO OAUTH =========
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
@@ -233,36 +226,34 @@ const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
 const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
 const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
 
-// ===== CONFIGURAÇÕES =====
-app.set('trust proxy', true);
-
-// ===== SESSÃO VIA COOKIE =====
+// ======= CONFIGURAÇÃO DE COOKIE DE SESSÃO =========
 app.use(
   cookieSession({
     name: 'session',
-    keys: ['chave-super-secreta-aqui'],
+    keys: ['chave-super-secreta-aqui'], // troque por uma chave segura real
     maxAge: 24 * 60 * 60 * 1000, // 1 dia
-    secure: true,
+    secure: true, // só HTTPS
     sameSite: 'lax',
   })
 );
 
-// ===== ROTA PRINCIPAL =====
-app.get('/', async (req, res) => {
+// ======= ROTA PRINCIPAL ===========
+app.get('/', (req, res) => {
   if (req.session?.user) {
     return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   }
 
-  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-    REDIRECT_URI
-  )}&scope=bbprofile`;
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
   return res.redirect(authUrl);
 });
 
-// ===== CALLBACK OAUTH2 =====
-app.get('/auth/callback', async (req, res) => {
+// ======= CALLBACK DO BB OAUTH ===========
+app.get('/auth/callback/bb', async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send('Código de autenticação ausente.');
+
+  if (!code) {
+    return res.status(400).send('Código de autenticação ausente.');
+  }
 
   try {
     const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
@@ -279,7 +270,6 @@ app.get('/auth/callback', async (req, res) => {
           Authorization: `Basic ${authHeader}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        httpsAgent: agenteHttps,
       }
     );
 
@@ -287,33 +277,33 @@ app.get('/auth/callback', async (req, res) => {
 
     const userInfo = await axios.get(USERINFO_URL, {
       headers: { Authorization: `Bearer ${accessToken}` },
-      httpsAgent: agenteHttps,
     });
 
+    // Salva os dados do usuário na sessão
     req.session.user = userInfo.data;
 
     return res.redirect('/');
   } catch (error) {
-    console.error('Erro no callback:', error.response?.data || error.message);
+    console.error('Erro no callback OAuth2:', error.response?.data || error.message);
     return res.status(500).send('Erro na autenticação OAuth2.');
   }
 });
 
-// ===== BLOQUEIO DE ACESSOS SEM LOGIN =====
+// ======= BLOQUEIO GLOBAL PARA USUÁRIOS NÃO AUTENTICADOS =======
 app.use((req, res, next) => {
   if (req.session?.user) return next();
 
-  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-    REDIRECT_URI
-  )}&scope=bbprofile`;
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
   return res.redirect(authUrl);
 });
 
-// ===== SERVE ARQUIVOS ESTÁTICOS =====
+// ======= ARQUIVOS ESTÁTICOS =========
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// ===== INICIA O SERVIDOR =====
+// ======= INICIA O SERVIDOR =========
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
 
