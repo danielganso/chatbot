@@ -1,24 +1,27 @@
-<system.webServer>
-  <rewrite>
-    <rules>
-      <rule name="ReverseProxyInboundRule1" stopProcessing="true">
-        <match url="(.*)" />
-        <action type="Rewrite" url="http://localhost:3000/{R:1}" />
-      </rule>
-    </rules>
-    <outboundRules>
-      <rule name="ReverseProxyOutboundRule1" preCondition="ResponseIsRedirect">
-        <match serverVariable="RESPONSE_Location" pattern="^http(s)?://superfeira.intranet.bb.com.br(.*)" />
-        <action type="Rewrite" value="http{R:1}://login.intranet.bb.com.br{R:2}" />
-      </rule>
-      <preConditions>
-        <preCondition name="ResponseIsRedirect">
-          <add input="{RESPONSE_STATUS}" pattern="3.." />
-        </preCondition>
-      </preConditions>
-    </outboundRules>
-  </rewrite>
-</system.webServer>
+Request URL
+https://login.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback%2Fbb&scope=bbprofile
+Request Method
+GET
+Status Code
+302 Found
+Remote Address
+172.17.78.118:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+Request URL
+https://login.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https%3A%2F%2Fsuperfeira.intranet.bb.com.br%2Fauth%2Fcallback%2Fbb&scope=bbprofile
+Request Method
+GET
+Status Code
+302 Found
+Remote Address
+172.17.78.118:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+superfeira.intranet.bb.com.br redirected you too many times.
+
 Erro no callback: error:1E08010C:DECODER routines::unsupported
 
 openssl pkcs12 -in seu_certificado.pfx -nocerts -out chave.key -nodes
