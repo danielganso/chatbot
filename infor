@@ -1,123 +1,129 @@
 <configuration>
   <system.webServer>
+    <!-- Aponta explicitamente o executável do Node.js -->
+    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+
+    <!-- Define o manipulador para o IIS chamar o iisnode -->
     <handlers>
       <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
     </handlers>
 
+    <!-- Reescreve todas as requisições para server.js -->
     <rewrite>
       <rules>
-        <!-- Redireciona tudo para server.js -->
-        <rule name="NodeApp" stopProcessing="true">
+        <rule name="NodeJsRule" stopProcessing="true">
           <match url=".*" />
-          <conditions logicalGrouping="MatchAll">
-            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-          </conditions>
           <action type="Rewrite" url="server.js" />
         </rule>
       </rules>
     </rewrite>
+
+    <!-- Opcional, mas ajuda se usar arquivos estáticos -->
+    <defaultDocument>
+      <files>
+        <add value="index.html" />
+      </files>
+    </defaultDocument>
   </system.webServer>
 </configuration>
-
+================================
 
 const express = require('express');
+const axios = require('axios');
 const path = require('path');
+const cookieSession = require('cookie-session');
+require('dotenv').config();
+
 const app = express();
+
+// Porta fornecida pelo IISNode (fallback para local)
 const PORT = process.env.PORT || 3000;
 
-// Rota protegida
-app.get('/', (req, res) => {
-  // Exemplo: redireciona se não autenticado
-  if (!req.headers.cookie?.includes('BBSSOToken')) {
-    const redirectUrl = `https://login.intranet.bb.com.br/sso/oauth2/authorize?client_id=superfeira&response_type=code&redirect_uri=https://superfeira.intranet.bb.com.br/auth/callback/bb&scope=bbprofile`;
-    return res.redirect(redirectUrl);
+app.set('trust proxy', true);
+
+// Configurações do OAuth2
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+
+const AUTH_BASE_URL = 'https://login.intranet.bb.com.br';
+const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
+const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
+const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
+
+app.use(
+  cookieSession({
+    name: 'session',
+    keys: ['chave-super-secreta'],
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: true,
+    sameSite: 'lax',
+  })
+);
+
+// Rota principal protegida
+app.get('/', async (req, res) => {
+  if (req.session?.user) {
+    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   }
 
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  return res.redirect(authUrl);
 });
 
 // Callback OAuth2
-app.get('/auth/callback/bb', (req, res) => {
+app.get('/auth/callback/bb', async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send('Code ausente.');
 
-  // Aqui você colocará o fluxo real com axios, etc.
-  res.send(`Código recebido: ${code}`);
+  if (!code) {
+    return res.status(400).send('Código de autenticação ausente.');
+  }
+
+  try {
+    const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+
+    const tokenResponse = await axios.post(
+      TOKEN_URL,
+      new URLSearchParams({
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: REDIRECT_URI,
+      }),
+      {
+        headers: {
+          Authorization: `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }) // para ambiente interno com certificado autoassinado
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const userInfo = await axios.get(USERINFO_URL, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
+    });
+
+    req.session.user = userInfo.data;
+
+    return res.redirect('/');
+  } catch (error) {
+    console.error('Erro no callback OAuth2:', error.response?.data || error.message);
+    return res.status(500).send('Erro na autenticação OAuth2.');
+  }
 });
 
-// Servir arquivos estáticos
+// Protege outros arquivos também
+app.use((req, res, next) => {
+  if (req.session?.user) return next();
+
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  return res.redirect(authUrl);
+});
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Start do servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-
-
-
-console.log("Content-Type: text/plain");
-console.log("");
-console.log("Hello from Node.js via iisnode!");
-
-<configuration>
-  <system.webServer>
-    <handlers>
-      <add name="iisnode" path="hello.js" verb="*" modules="iisnode"/>
-    </handlers>
-    <rewrite>
-      <rules>
-        <rule name="NodeHello" stopProcessing="true">
-          <match url="hello" />
-          <action type="Rewrite" url="hello.js" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
-</configuration>
-
-
-=============
-
-
-
-var http = require('http');
-
-http.createServer(function (req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello from iisnode!\n');
-}).listen(process.env.PORT);
-
-
-<configuration>
-  <system.webServer>
-    <handlers>
-      <add name="iisnode" path="hello.js" verb="*" modules="iisnode" />
-    </handlers>
-    <rewrite>
-      <rules>
-        <rule name="iisnode">
-          <match url=".*" />
-          <action type="Rewrite" url="hello.js" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
-</configuration>
-
-iisnodetest
-
-<configuration>
-  <system.webServer>
-    <handlers>
-      <add name="iisnode" path="hello.js" verb="*" modules="iisnode" />
-    </handlers>
-    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
-  </system.webServer>
-</configuration>
-
-
-
-
-
-
