@@ -109,30 +109,46 @@ app.listen(PORT, () => {
 });
 
 
+===================================
 <configuration>
   <system.webServer>
-
-    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+    <iisnode 
+      nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" 
+      loggingEnabled="true"
+      devErrorsEnabled="true" 
+    />
 
     <handlers>
       <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
     </handlers>
 
     <rewrite>
+      <allowedServerVariables>
+        <add name="HTTP_X_FORWARDED_PROTO" />
+      </allowedServerVariables>
+      
       <rules>
-        <rule name="NodeJsRule" stopProcessing="true">
+        <rule name="Set-X-Forwarded-Proto-HTTPS" stopProcessing="true">
+          <match url=".*" />
           <conditions>
+            <add input="{HTTPS}" pattern="on" ignoreCase="true" />
+          </conditions>
+          <serverVariables>
+            <set name="HTTP_X_FORWARDED_PROTO" value="https" />
+          </serverVariables>
+          <action type="None" />
+        </rule>
+        
+        <rule name="NodeJsRule" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
             <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
             <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
           </conditions>
-          
-          <match url=".*" /> 
           <action type="Rewrite" url="server.js" />
         </rule>
       </rules>
     </rewrite>
 
-    <iisnode devErrorsEnabled="true" loggingEnabled="true" node_env="production" />
-    
   </system.webServer>
 </configuration>
