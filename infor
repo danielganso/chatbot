@@ -17,8 +17,61 @@
     </rewrite>
   </system.webServer>
 </configuration>
+======================
 
+app.get('/callback', async (req, res) => {
+  const code = req.query.code;
 
+  console.log('Callback recebido. Code:', code);  // <--- log novo
+
+  if (!code) {
+    console.warn('Código de autorização ausente.');
+    return res.status(400).send('Código de autorização ausente.');
+  }
+
+  try {
+    console.log('Trocando código por token...');
+
+    const tokenResponse = await axios.post(
+      'https://login.intranet.bb.com.br/sso/oauth2/access_token',
+      qs.stringify({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: process.env.REDIRECT_URI
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')
+        }
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    console.log('Access token recebido com sucesso.');
+
+    console.log('Buscando dados do usuário...');
+    const userInfoResponse = await axios.post(
+      'https://login.intranet.bb.com.br/sso/oauth2/userinfo',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    console.log('Dados do usuário recebidos:', userInfoResponse.data);
+
+    req.session.userinfo = userInfoResponse.data;
+    res.redirect('/');
+  } catch (error) {
+    console.error('Erro na autenticação:', error.response?.data || error.message);
+    res.status(500).send('Erro na autenticação.');
+  }
+});
+
+===================
 
 require('dotenv').config();
 const express = require('express');
