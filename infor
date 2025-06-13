@@ -21,6 +21,41 @@
 </configuration>
 
 
+const express = require('express');
+const path = require('path');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Rota protegida
+app.get('/', (req, res) => {
+  // Exemplo: redireciona se não autenticado
+  if (!req.headers.cookie?.includes('BBSSOToken')) {
+    const redirectUrl = `https://login.intranet.bb.com.br/sso/oauth2/authorize?client_id=superfeira&response_type=code&redirect_uri=https://superfeira.intranet.bb.com.br/auth/callback/bb&scope=bbprofile`;
+    return res.redirect(redirectUrl);
+  }
+
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+// Callback OAuth2
+app.get('/auth/callback/bb', (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send('Code ausente.');
+
+  // Aqui você colocará o fluxo real com axios, etc.
+  res.send(`Código recebido: ${code}`);
+});
+
+// Servir arquivos estáticos
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Start do servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+
+
 
 ==============================================================
 <configuration>
