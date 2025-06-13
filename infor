@@ -1,6 +1,26 @@
 npm install express express-session dotenv axios cors querystring
 https://superfeira.intranet.bb.com.br/auth/callback/bb?code=yzRMfkppHY3CEMlUZZDTBR5XycA&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
 
+const https = require('https');
+const fs = require('fs');
+
+const bbCA = fs.readFileSync('./certs/bb_intranet_ca.crt');
+
+const httpsAgent = new https.Agent({
+  ca: bbCA
+});
+
+// Use o agent nas chamadas axios
+const tokenResponse = await axios.post('https://...', data, {
+  headers: { ... },
+  httpsAgent
+});
+
+
+
+
+
+
 <configuration>
   <system.webServer>
 
