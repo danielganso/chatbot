@@ -107,3 +107,32 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+
+<configuration>
+  <system.webServer>
+
+    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+
+    <handlers>
+      <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
+    </handlers>
+
+    <rewrite>
+      <rules>
+        <rule name="NodeJsRule" stopProcessing="true">
+          <conditions>
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          
+          <match url=".*" /> 
+          <action type="Rewrite" url="server.js" />
+        </rule>
+      </rules>
+    </rewrite>
+
+    <iisnode devErrorsEnabled="true" loggingEnabled="true" node_env="production" />
+    
+  </system.webServer>
+</configuration>
