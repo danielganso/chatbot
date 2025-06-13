@@ -158,3 +158,123 @@ app.listen(PORT, () => {
     
   </system.webServer>
 </configuration>
+
+
+
+=============================
+
+const express = require('express');
+const axios = require('axios');
+const path = require('path');
+const cookieSession = require('cookie-session');
+require('dotenv').config();
+
+const app = express();
+// Porta fornecida pelo IISNode (fallback para local)
+const PORT = process.env.PORT || 3000;
+
+app.set('trust proxy', true);
+
+// Configurações do OAuth2
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+const AUTH_BASE_URL = 'https://login.intranet.bb.com.br';
+const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
+const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
+const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
+
+app.use(
+  cookieSession({
+    name: 'session',
+    keys: ['chave-super-secreta'],
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: true,
+    sameSite: 'lax',
+  })
+);
+
+// Middleware para logs (debug)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} - User: ${req.session?.user ? 'Authenticated' : 'Not authenticated'}`);
+  next();
+});
+
+// Servir arquivos estáticos ANTES das rotas protegidas
+app.use('/dist', express.static(path.join(__dirname, 'dist')));
+
+// Callback OAuth2 - SEM proteção
+app.get('/auth/callback/bb', async (req, res) => {
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('Código de autenticação ausente.');
+  }
+
+  try {
+    const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+    const tokenResponse = await axios.post(
+      TOKEN_URL,
+      new URLSearchParams({
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: REDIRECT_URI,
+      }),
+      {
+        headers: {
+          Authorization: `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    const userInfo = await axios.get(USERINFO_URL, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
+    });
+
+    req.session.user = userInfo.data;
+    console.log('Usuário autenticado:', userInfo.data);
+    return res.redirect('/');
+  } catch (error) {
+    console.error('Erro no callback OAuth2:', error.response?.data || error.message);
+    return res.status(500).send('Erro na autenticação OAuth2.');
+  }
+});
+
+// Rota de logout
+app.get('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/');
+});
+
+// Rota principal - COM proteção
+app.get('/', async (req, res) => {
+  console.log('Rota principal acessada. User session:', req.session?.user ? 'EXISTS' : 'DOES NOT EXIST');
+  
+  if (req.session?.user) {
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    console.log('Enviando arquivo:', indexPath);
+    return res.sendFile(indexPath);
+  }
+
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
+  console.log('Redirecionando para login:', authUrl);
+  return res.redirect(authUrl);
+});
+
+// Rota catch-all para SPAs (caso você tenha routing no frontend)
+app.get('*', (req, res) => {
+  // Se não for um arquivo, redirecionar para a rota principal
+  if (!req.url.includes('.')) {
+    return res.redirect('/');
+  }
+  res.status(404).send('Arquivo não encontrado');
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Diretório atual: ${__dirname}`);
+  console.log(`Diretório dist: ${path.join(__dirname, 'dist')}`);
+});
