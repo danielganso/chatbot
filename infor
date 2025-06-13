@@ -55,15 +55,8 @@ app.use(
     sameSite: 'lax',
   })
 );
-// Rota principal protegida
-app.get('/', async (req, res) => {
-  if (req.session?.user) {
-    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  }
-  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
-  return res.redirect(authUrl);
-});
-// Callback OAuth2
+
+// Callback OAuth2 - SEM proteção
 app.get('/auth/callback/bb', async (req, res) => {
   const code = req.query.code;
   if (!code) {
@@ -83,7 +76,7 @@ app.get('/auth/callback/bb', async (req, res) => {
           Authorization: `Basic ${authHeader}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }) // para ambiente interno com certificado autoassinado
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
       }
     );
     const accessToken = tokenResponse.data.access_token;
@@ -99,22 +92,18 @@ app.get('/auth/callback/bb', async (req, res) => {
   }
 });
 
-// ÚNICA MUDANÇA: Middleware de proteção modificado para evitar loop
-app.use((req, res, next) => {
-  // Se já está autenticado, prosseguir normalmente
-  if (req.session?.user) return next();
-  
-  // CORREÇÃO: Se é arquivo estático e não está autenticado, bloquear sem redirect
-  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i)) {
-    return res.status(401).end();
+// Rota principal - COM proteção
+app.get('/', async (req, res) => {
+  if (req.session?.user) {
+    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   }
-  
-  // Para outras rotas, redirecionar para OAuth
   const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=bbprofile`;
   return res.redirect(authUrl);
 });
 
+// Servir arquivos (CSS, JS, imagens) - SEM proteção para evitar loop
 app.use(express.static(path.join(__dirname, 'dist')));
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
