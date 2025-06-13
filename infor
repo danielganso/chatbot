@@ -7,7 +7,7 @@ const https = require('https');
 
 const app = express();
 
-const clientId = process.env.CLIENT_ID; // Ex: superfeira
+const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const redirectUri = process.env.REDIRECT_URI; // Ex: https://superfeira.intranet.bb.com.br/auth/callback/bb
 const authUrl = 'https://login.intranet.bb.com.br:443/sso/oauth2/authorize';
@@ -15,31 +15,30 @@ const tokenUrl = 'https://login.intranet.bb.com.br:443/sso/oauth2/access_token';
 const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo';
 const scope = 'bbprofile';
 
-// Carrega o certificado raiz para validar o SSL interno
+// Certificado raiz
 const rootCert = fs.readFileSync(path.join(__dirname, 'certs', 'bbraiz.crt'));
-
-// Cria HTTPS Agent com certificado raiz para ignorar erro self-signed
 const httpsAgent = new https.Agent({
   ca: rootCert,
   rejectUnauthorized: true,
 });
 
-// Serve os arquivos estáticos da pasta dist (sua app front-end)
-app.use('/app', express.static(path.join(__dirname, 'dist')));
+// Serve o front-end estático da pasta dist na raiz '/'
+app.use(express.static(path.join(__dirname, 'dist')));
 
-// Rota raiz redireciona direto para login no BB
+// Rota raiz redireciona direto para o login BB
 app.get('/', (req, res) => {
+  // Se quiser controlar sessão para não pedir login sempre, precisa implementar sessão aqui.
+  // Por enquanto sempre redireciona direto para login
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: clientId,
     redirect_uri: redirectUri,
     scope,
   });
-
   res.redirect(`${authUrl}?${params.toString()}`);
 });
 
-// Callback OAuth2 do BB - troca código por token, pega dados do usuário e redireciona para /app
+// Callback OAuth2
 app.get('/auth/callback/bb', async (req, res) => {
   try {
     const { code } = req.query;
@@ -47,7 +46,6 @@ app.get('/auth/callback/bb', async (req, res) => {
       return res.status(400).send('Código OAuth2 não fornecido.');
     }
 
-    // Trocar código por token
     const tokenResponse = await axios.post(tokenUrl, new URLSearchParams({
       grant_type: 'authorization_code',
       code,
@@ -65,26 +63,23 @@ app.get('/auth/callback/bb', async (req, res) => {
       return res.status(401).send('Falha ao obter access token.');
     }
 
-    // Pegar dados do usuário com token
+    // Busca dados do usuário (opcional)
     const userInfoResponse = await axios.post(userInfoUrl, null, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
       httpsAgent,
     });
 
-    // Aqui você pode salvar userInfo na sessão ou banco
-    // req.session.user = userInfoResponse.data;
+    // Aqui você pode salvar userInfo em sessão, banco, etc.
 
-    // Redireciona para aplicação protegida
-    res.redirect('/app');
+    // Depois redireciona para a aplicação estática na raiz
+    res.redirect('/');
   } catch (error) {
     console.error('Erro no callback OAuth2:', error.response?.data || error.message);
     res.status(500).send('Erro na autenticação OAuth2');
   }
 });
 
-// Start do servidor
+// Start servidor
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
@@ -128,7 +123,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // === HTTPS Agent com o certificado raiz ===
-const caCertPath = path.resolve(__dirname, 'certs', 'bb-root.crt');
+const caCertPath = path.resolve(__dirname, 'certs', 'bbraiz.crt');
 const ca = fs.readFileSync(caCertPath);
 const httpsAgent = new https.Agent({
   ca,
