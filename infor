@@ -108,25 +108,7 @@ http.createServer(function (req, res) {
 iisnodetest
 
 
-
-HTTP Error 500.19 - Internal Server Error
-The requested page cannot be accessed because the related configuration data for the page is invalid.
-Detailed Error Information:
-Module	   IIS Web Core
-Notification	   BeginRequest
-Handler	   Not yet determined
-Error Code	   0x80070021
-Config Error	   This configuration section cannot be used at this path. This happens when the section is locked at a parent level. Locking is either by default (overrideModeDefault="Deny"), or set explicitly by a location tag with overrideMode="Deny" or the legacy allowOverride="false".
-Config File	   \\?\C:\workspace\teste\web.config
-Requested URL	   http://localhost:8080/hello
-Physical Path	   C:\workspace\teste\hello
-Logon Method	   Not yet determined
-Logon User	   Not yet determined
-Config Source:
-
-    2:   <system.webServer>
-    3:     <handlers>
-    4:       <add name="iisnode" path="hello.js" verb="*" modules="iisnode" />
+The iisnode module is unable to start the node.exe process. Make sure the node.exe executable is available at the location specified in the system.webServer/iisnode/@nodeProcessCommandLine element of web.config. By default node.exe is expected in one of the directories listed in the PATH environment variable.
 
 
 
