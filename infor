@@ -107,8 +107,16 @@ http.createServer(function (req, res) {
 
 iisnodetest
 
+<configuration>
+  <system.webServer>
+    <handlers>
+      <add name="iisnode" path="hello.js" verb="*" modules="iisnode" />
+    </handlers>
+    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+  </system.webServer>
+</configuration>
 
-The iisnode module is unable to start the node.exe process. Make sure the node.exe executable is available at the location specified in the system.webServer/iisnode/@nodeProcessCommandLine element of web.config. By default node.exe is expected in one of the directories listed in the PATH environment variable.
+
 
 
 
