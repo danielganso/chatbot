@@ -1,3 +1,6 @@
+npm install express express-session dotenv axios cors querystring
+
+
 <configuration>
   <system.webServer>
 
