@@ -1,5 +1,5 @@
 npm install express express-session dotenv axios cors querystring
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+https://superfeira.intranet.bb.com.br/auth/callback/bb?code=yzRMfkppHY3CEMlUZZDTBR5XycA&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
 
 <configuration>
   <system.webServer>
