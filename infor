@@ -111,48 +111,23 @@ app.listen(PORT, () => {
 
 ===================================================
 
-<configuration>
-  <system.webServer>
-    
-    <urlCompression doStaticCompression="true" doDynamicCompression="false" />
+HTTP Error 500.52 - URL Rewrite Module Error.
+The page cannot be displayed because an internal server error has occurred.
+Detailed Error Information:
+Module	   RewriteModule
+Notification	   SendResponse
+Handler	   StaticFile
+Error Code	   0x80070021
+Config Error	   This configuration section cannot be used at this path. This happens when the section is locked at a parent level. Locking is either by default (overrideModeDefault="Deny"), or set explicitly by a location tag with overrideMode="Deny" or the legacy allowOverride="false".
+Config File	   \\?\C:\workspace\devSuperfsa\web.config
+Requested URL	   https://superfeira.intranet.bb.com.br:443/
+Physical Path	   C:\workspace\devSuperfsa
+Logon Method	   Not yet determined
+Logon User	   Not yet determined
+Config Source:
 
-    <iisnode 
-      nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" 
-      loggingEnabled="true"
-      devErrorsEnabled="true" 
-    />
+   16:     <rewrite>
+   17:       <allowedServerVariables>
+   18:         <add name="HTTP_X_FORWARDED_PROTO" />
 
-    <handlers>
-      <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
-    </handlers>
-
-    <rewrite>
-      <allowedServerVariables>
-        <add name="HTTP_X_FORWARDED_PROTO" />
-      </allowedServerVariables>
-      
-      <rules>
-        <rule name="Set-X-Forwarded-Proto-HTTPS" stopProcessing="true">
-          <match url=".*" />
-          <conditions>
-            <add input="{HTTPS}" pattern="on" ignoreCase="true" />
-          </conditions>
-          <serverVariables>
-            <set name="HTTP_X_FORWARDED_PROTO" value="https" />
-          </serverVariables>
-          <action type="None" />
-        </rule>
-        
-        <rule name="NodeJsRule" stopProcessing="true">
-          <match url=".*" />
-          <conditions logicalGrouping="MatchAll">
-            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-          </conditions>
-          <action type="Rewrite" url="server.js" />
-        </rule>
-      </rules>
-    </rewrite>
-
-  </system.webServer>
-</configuration>
+More Information:
