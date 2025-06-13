@@ -111,23 +111,50 @@ app.listen(PORT, () => {
 
 ===================================================
 
-HTTP Error 500.52 - URL Rewrite Module Error.
-The page cannot be displayed because an internal server error has occurred.
-Detailed Error Information:
-Module	   RewriteModule
-Notification	   SendResponse
-Handler	   StaticFile
-Error Code	   0x80070021
-Config Error	   This configuration section cannot be used at this path. This happens when the section is locked at a parent level. Locking is either by default (overrideModeDefault="Deny"), or set explicitly by a location tag with overrideMode="Deny" or the legacy allowOverride="false".
-Config File	   \\?\C:\workspace\devSuperfsa\web.config
-Requested URL	   https://superfeira.intranet.bb.com.br:443/
-Physical Path	   C:\workspace\devSuperfsa
-Logon Method	   Not yet determined
-Logon User	   Not yet determined
-Config Source:
-
-   16:     <rewrite>
-   17:       <allowedServerVariables>
-   18:         <add name="HTTP_X_FORWARDED_PROTO" />
-
-More Information:
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.webServer>
+    <!-- Aponta explicitamente o executável do Node.js -->
+    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+    
+    <!-- Define o manipulador para o IIS chamar o iisnode -->
+    <handlers>
+      <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
+    </handlers>
+    
+    <!-- Reescreve todas as requisições para server.js, EXCETO arquivos estáticos -->
+    <rewrite>
+      <rules>
+        <!-- Regra para arquivos estáticos - NÃO reescrever -->
+        <rule name="StaticFiles" stopProcessing="true">
+          <match url="^(.*\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))$" />
+          <action type="None" />
+        </rule>
+        
+        <!-- Regra para diretório dist - NÃO reescrever -->
+        <rule name="DistFolder" stopProcessing="true">
+          <match url="^dist/.*" />
+          <action type="None" />
+        </rule>
+        
+        <!-- Regra principal - Reescrever todas as outras requisições para server.js -->
+        <rule name="NodeJsRule" stopProcessing="true">
+          <match url=".*" />
+          <conditions>
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="server.js" />
+        </rule>
+      </rules>
+    </rewrite>
+    
+    <!-- REMOVER defaultDocument para evitar conflitos -->
+    <!-- <defaultDocument>
+      <files>
+        <add value="index.html" />
+      </files>
+    </defaultDocument> -->
+    
+  </system.webServer>
+</configuration>
