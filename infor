@@ -272,48 +272,141 @@ app.listen(PORT, () => {
 45457854867867867867976987978987987978
 
 
-<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <system.webServer>
-    <!-- Configuração do iisnode -->
-    <iisnode 
-      nodeProcessCommandLine="C:\Program Files\nodejs\node.exe"
-      debuggingEnabled="true"
-      loggingEnabled="true"
-      logDirectory="iisnode"
-      interceptor="iisnode/interceptor.js" />
-    
-    <!-- Handlers -->
+    <!-- Aponta explicitamente o executável do Node.js -->
+    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+    <!-- Define o manipulador para o IIS chamar o iisnode -->
     <handlers>
       <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
     </handlers>
-    
-    <!-- URL Rewrite - TODAS as requisições vão para Node.js -->
+    <!-- Reescreve todas as requisições para server.js -->
     <rewrite>
       <rules>
-        <rule name="NodeJS" stopProcessing="true">
+        <rule name="NodeJsRule" stopProcessing="true">
           <match url=".*" />
           <action type="Rewrite" url="server.js" />
         </rule>
       </rules>
     </rewrite>
-    
-    <!-- Documento padrão -->
+    <!-- Opcional, mas ajuda se usar arquivos estáticos -->
     <defaultDocument>
       <files>
-        <add value="server.js" />
+        <add value="index.html" />
       </files>
     </defaultDocument>
-    
-    <!-- Configurações de erro -->
-    <httpErrors errorMode="Detailed" />
-    
-    <!-- Headers de segurança -->
-    <httpProtocol>
-      <customHeaders>
-        <add name="X-Frame-Options" value="SAMEORIGIN" />
-        <add name="X-Content-Type-Options" value="nosniff" />
-      </customHeaders>
-    </httpProtocol>
   </system.webServer>
 </configuration>
+
+
+
+=============================
+
+const express = require('express');
+const axios = require('axios');
+const path = require('path');
+const cookieSession = require('cookie-session');
+require('dotenv').config();
+
+const app = express();
+
+// Porta fornecida pelo IISNode (fallback para local)
+const PORT = process.env.PORT || 3000;
+
+app.set('trust proxy', true);
+
+// Configurações do OAuth2
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+const AUTH_BASE_URL = 'https://login.intranet.bb.com.br';
+const AUTH_URL = `${AUTH_BASE_URL}/sso/oauth2/authorize`;
+const TOKEN_URL = `${AUTH_BASE_URL}/sso/oauth2/access_token`;
+const USERINFO_URL = `${AUTH_BASE_URL}/sso/oauth2/userinfo`;
+
+app.use(
+  cookieSession({
+    name: 'session',
+    keys: ['chave-super-secreta'],
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: true,
+    sameSite: 'lax',
+  })
+);
+
+// Callback OAuth2 - DEVE vir antes de qualquer middleware de proteção
+app.get('/auth/callback/bb', async (req, res) => {
+  const code = req.query.code;
+  
+  if (!code) {
+    return res.status(400).send('Código de autenticação ausente.');
+  }
+
+  try {
+    const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+    
+    const tokenResponse = await axios.post(
+      TOKEN_URL,
+      new URLSearchParams({
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: REDIRECT_URI,
+      }),
+      {
+        headers: {
+          Authorization: `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const userInfo = await axios.get(USERINFO_URL, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }),
+    });
+
+    req.session.user = userInfo.data;
+    return res.redirect('/');
+    
+  } catch (error) {
+    console.error('Erro no callback OAuth2:', error.response?.data || error.message);
+    return res.status(500).send('Erro na autenticação OAuth2.');
+  }
+});
+
+// Rota principal protegida
+app.get('/', async (req, res) => {
+  if (req.session?.user) {
+    return res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  }
+
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=profile%20email%20custom`;
+  return res.redirect(authUrl);
+});
+
+// CORREÇÃO: Middleware seletivo que NÃO protege arquivos estáticos
+app.use((req, res, next) => {
+  // Se já está autenticado, prosseguir
+  if (req.session?.user) {
+    return next();
+  }
+  
+  // Se é uma requisição para arquivo estático (CSS, JS, imagens, etc.) 
+  // E o usuário não está autenticado, retornar 401 ao invés de redirect
+  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i)) {
+    return res.status(401).send('Não autorizado');
+  }
+  
+  // Para outras rotas HTML, redirecionar para login
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=profile%20email%20custom`;
+  return res.redirect(authUrl);
+});
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
