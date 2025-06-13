@@ -124,3 +124,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+====================
+<configuration>
+  <system.webServer>
+    <iisnode nodeProcessCommandLine="C:\Program Files\nodejs\node.exe" />
+
+    <handlers>
+      <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
+    </handlers>
+
+    <rewrite>
+      <rules>
+        <rule name="NodeJsRule" stopProcessing="true">
+          <match url=".*" />
+          <action type="Rewrite" url="server.js" preserveQueryString="true" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
+
