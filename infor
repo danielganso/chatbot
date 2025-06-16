@@ -5,7 +5,6 @@ const https = require('https')
 const fs = require('fs')
 const path = require('path')
 const qs = require('qs')
-const cookieParser = require('cookie-parser')
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -25,32 +24,14 @@ const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo'
 
 const clientId     = process.env.CLIENT_ID
 const clientSecret = process.env.CLIENT_SECRET
-const redirectUri  = process.env.REDIRECT_URI  // ex: https://seu-dominio/auth/callback/bb
-const scope        = 'bbprofile'               // adapte se precisar
+const redirectUri  = process.env.REDIRECT_URI   // ex: https://seu-dominio/auth/callback/bb
+const scope        = 'bbprofile'                // seu escopo
 
-// Caminho da sua SPA gerada em dist
+// Pasta "dist" fica ao lado do server.js
 const distPath = path.join(__dirname, 'dist')
 
-// Body parsers / cookies
-app.use(cookieParser())
-
-// Middleware de proteção — tudo que não for /login ou /auth/callback/* passa por aqui
-app.use((req, res, next) => {
-  if (
-    req.path === '/login' ||
-    req.path.startsWith('/auth/callback')
-  ) {
-    return next()
-  }
-  // se não existe cookie de sessão, manda para /login
-  if (!req.cookies.bb_token) {
-    return res.redirect('/login')
-  }
-  next()
-})
-
-// Rota de login — inicia o fluxo OAuth2
-app.get('/login', (req, res) => {
+// 1) rota raiz: inicia o SSO
+app.get('/', (req, res) => {
   const authQuery = new URLSearchParams({
     response_type: 'code',
     client_id:     clientId,
@@ -60,7 +41,7 @@ app.get('/login', (req, res) => {
   res.redirect(`${authUrl}?${authQuery}`)
 })
 
-// Callback do BB — aqui troca o code por token, cria cookie e redireciona para /
+// 2) callback do BB: troca code→token, faz userinfo e entrega o index.html
 app.get('/auth/callback/bb', async (req, res) => {
   const { code } = req.query
   if (!code) {
@@ -68,8 +49,8 @@ app.get('/auth/callback/bb', async (req, res) => {
   }
 
   try {
-    // Troca code por token
-    const tokenResponse = await axios.post(
+    // troca code por token
+    const tokenResp = await axios.post(
       tokenUrl,
       qs.stringify({
         grant_type:   'authorization_code',
@@ -80,38 +61,36 @@ app.get('/auth/callback/bb', async (req, res) => {
         httpsAgent,
         headers: {
           'Content-Type':  'application/x-www-form-urlencoded',
-          'Authorization': 'Basic ' + Buffer
-            .from(`${clientId}:${clientSecret}`)
-            .toString('base64')
+          'Authorization': 'Basic ' +
+            Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
         }
       }
     )
-    const accessToken = tokenResponse.data.access_token
+    const accessToken = tokenResp.data.access_token
 
-    // (opcional) buscar info do usuário
-    // await axios.post(userInfoUrl, null, {
-    //   httpsAgent,
-    //   headers: { Authorization: `Bearer ${accessToken}` }
-    // })
+    // opcional: buscar userinfo
+    await axios.post(
+      userInfoUrl,
+      null,
+      {
+        httpsAgent,
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    )
 
-    // Cria um cookie de sessão simples
-    res.cookie('bb_token', accessToken, {
-      httpOnly: true,
-      secure:   true,
-      sameSite: 'lax'
-    })
-
-    // Volta para a SPA
-    res.redirect('/')
+    // entrega sua SPA diretamente
+    return res.sendFile(path.join(distPath, 'index.html'))
   }
   catch (err) {
-    console.error('Erro no fluxo OAuth2:', err)
-    res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
+    console.error('Erro no OAuth2:', err)
+    return res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
   }
 })
 
-// Por fim, serve sua SPA em dist, na raiz
+// 3) serve todo o resto de dist (JS/CSS/assets) na raiz
 app.use(express.static(distPath))
+
+// fallback para qualquer rota SPA (caso você use React Router etc)
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })
