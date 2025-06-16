@@ -12,10 +12,7 @@ const port = process.env.PORT || 3000
 // === HTTPS Agent com o certificado raiz ===
 const caCertPath = path.resolve(__dirname, 'certs', 'bbraiz.crt')
 const ca = fs.readFileSync(caCertPath)
-const httpsAgent = new https.Agent({
-  ca,
-  rejectUnauthorized: true
-})
+const httpsAgent = new https.Agent({ ca, rejectUnauthorized: true })
 
 // === URLs e credenciais do BB ===
 const authUrl     = 'https://login.intranet.bb.com.br/sso/oauth2/authorize'
@@ -24,13 +21,13 @@ const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo'
 
 const clientId     = process.env.CLIENT_ID
 const clientSecret = process.env.CLIENT_SECRET
-const redirectUri  = process.env.REDIRECT_URI   // ex: https://seu-dominio/auth/callback/bb
-const scope        = 'bbprofile'                // seu escopo
+const redirectUri  = process.env.REDIRECT_URI  // ex: https://seu-dominio/auth/callback/bb
+const scope        = 'bbprofile'
 
-// Pasta "dist" fica ao lado do server.js
+// Pasta dist fica ao lado de server.js
 const distPath = path.join(__dirname, 'dist')
 
-// 1) rota raiz: inicia o SSO
+// 1) Rota raiz: inicia o login no BB
 app.get('/', (req, res) => {
   const authQuery = new URLSearchParams({
     response_type: 'code',
@@ -41,15 +38,12 @@ app.get('/', (req, res) => {
   res.redirect(`${authUrl}?${authQuery}`)
 })
 
-// 2) callback do BB: troca code→token, faz userinfo e entrega o index.html
+// 2) Callback do BB: troca code→token, busca userinfo e entrega o index.html da sua SPA
 app.get('/auth/callback/bb', async (req, res) => {
   const { code } = req.query
-  if (!code) {
-    return res.status(400).send('Código de autorização ausente.')
-  }
+  if (!code) return res.status(400).send('Código de autorização ausente.')
 
   try {
-    // troca code por token
     const tokenResp = await axios.post(
       tokenUrl,
       qs.stringify({
@@ -60,7 +54,7 @@ app.get('/auth/callback/bb', async (req, res) => {
       {
         httpsAgent,
         headers: {
-          'Content-Type':  'application/x-www-form-urlencoded',
+          'Content-Type': 'application/x-www-form-urlencoded',
           'Authorization': 'Basic ' +
             Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
         }
@@ -68,36 +62,29 @@ app.get('/auth/callback/bb', async (req, res) => {
     )
     const accessToken = tokenResp.data.access_token
 
-    // opcional: buscar userinfo
+    // opcional: consulta userinfo
     await axios.post(
       userInfoUrl,
       null,
-      {
-        httpsAgent,
-        headers: { Authorization: `Bearer ${accessToken}` }
-      }
+      { httpsAgent, headers: { Authorization: `Bearer ${accessToken}` } }
     )
 
-    // entrega sua SPA diretamente
-    return res.sendFile(path.join(distPath, 'index.html'))
+    // **aqui** entregamos o index.html diretamente
+    res.sendFile(path.join(distPath, 'index.html'))
   }
   catch (err) {
     console.error('Erro no OAuth2:', err)
-    return res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
+    res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
   }
 })
 
-// 3) serve todo o resto de dist (JS/CSS/assets) na raiz
+// 3) Depois, serve todos os assets estáticos (JS, CSS, imagens)
 app.use(express.static(distPath))
-
-// fallback para qualquer rota SPA (caso você use React Router etc)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'))
-})
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`)
 })
+
 
 
 HRESULT: 0x2
