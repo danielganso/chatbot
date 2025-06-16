@@ -87,19 +87,118 @@ app.listen(port, () => {
 
 
 
-GET
-	https://login.intranet.bb.com.br/sso/oauth2/authorize?response_type=code&client_id=superfeira&redirect_uri=https://superfeira.intranet.bb.com.br/auth/callback/bb&scope=bbprofile
-Status
-302
-Found
-VersãoHTTP/1.1
-Transferido4,22 kB (tamanho 3,64 kB)
-Referrer Policystrict-origin-when-cross-origin
-Prioridade da requisiçãoHighest
-Resolução de DNSSistema
 
-https://superfeira.intranet.bb.com.br/auth/callback/bb?code=TNEILPWPXkK9rSgYnoo9H1uZxVA&iss=https%3A%2F%2Flogin.intranet.bb.com.br%3A443%2Fsso%2Foauth2&client_id=superfeira
-https://superfeira.intranet.bb.com.br
+
+
+
+
+
+-==================================
+
+teste 2
+
+require('dotenv').config()
+const express = require('express')
+const axios = require('axios')
+const https = require('https')
+const fs = require('fs')
+const path = require('path')
+const qs = require('qs')
+
+const app = express()
+const port = process.env.PORT || 3000
+
+// === HTTPS Agent com o certificado raiz ===
+const caCertPath = path.resolve(__dirname, 'certs', 'bbraiz.crt')
+const ca = fs.readFileSync(caCertPath)
+const httpsAgent = new https.Agent({ ca, rejectUnauthorized: true })
+
+// === URLs e credenciais do BB ===
+const authUrl     = 'https://login.intranet.bb.com.br/sso/oauth2/authorize'
+const tokenUrl    = 'https://login.intranet.bb.com.br/sso/oauth2/access_token'
+const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo'
+
+const clientId     = process.env.CLIENT_ID
+const clientSecret = process.env.CLIENT_SECRET
+const redirectUri  = process.env.REDIRECT_URI    // ex: https://superfeira.intranet.bb.com.br/auth/callback/bb
+const scope        = 'bbprofile'
+
+// caminho para a sua pasta dist (fica ao lado do server.js)
+const distPath = path.join(__dirname, 'dist')
+
+// 1) rota de login — quem acessar /login é mandado pro SSO do BB
+app.get('/login', (req, res) => {
+  const authQuery = new URLSearchParams({
+    response_type: 'code',
+    client_id:     clientId,
+    redirect_uri:  redirectUri,
+    scope
+  }).toString()
+  res.redirect(`${authUrl}?${authQuery}`)
+})
+
+// 2) callback do BB — troca code→token, busca userinfo e redireciona pra raiz
+app.get('/auth/callback/bb', async (req, res) => {
+  const { code } = req.query
+  if (!code) {
+    return res.status(400).send('Código de autorização ausente.')
+  }
+
+  try {
+    // troca o code pelo access_token
+    const tokenResp = await axios.post(
+      tokenUrl,
+      qs.stringify({
+        grant_type:   'authorization_code',
+        code,
+        redirect_uri: redirectUri
+      }),
+      {
+        httpsAgent,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' +
+            Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+        }
+      }
+    )
+    const accessToken = tokenResp.data.access_token
+
+    // (opcional) ler userinfo
+    await axios.post(userInfoUrl, null, {
+      httpsAgent,
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+
+    // **aqui**: volta pra raiz — Browser URL fica só "https://superfeira.intranet.bb.com.br/"
+    res.redirect('/')
+  }
+  catch (err) {
+    console.error('Erro no OAuth2:', err)
+    res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
+  }
+})
+
+// 3) serve tudo de dist na raiz (/)
+//    -- GET / => dist/index.html
+//    -- GET /main.js, /styles.css, /assets/... => dist/main.js, etc
+app.use(express.static(distPath))
+
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`)
+})
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
