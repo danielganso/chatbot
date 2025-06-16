@@ -1,69 +1,80 @@
-require('dotenv').config();
-const express = require('express');
-const axios = require('axios');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const qs = require('qs');
+require('dotenv').config()
+const express = require('express')
+const axios = require('axios')
+const https = require('https')
+const fs = require('fs')
+const path = require('path')
+const qs = require('qs')
+const cookieParser = require('cookie-parser')
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = express()
+const port = process.env.PORT || 3000
 
 // === HTTPS Agent com o certificado raiz ===
-const caCertPath = path.resolve(__dirname, 'certs', 'bbraiz.crt');
-const ca = fs.readFileSync(caCertPath);
+const caCertPath = path.resolve(__dirname, 'certs', 'bbraiz.crt')
+const ca = fs.readFileSync(caCertPath)
 const httpsAgent = new https.Agent({
   ca,
   rejectUnauthorized: true
-});
+})
 
 // === URLs e credenciais do BB ===
-const authUrl     = 'https://login.intranet.bb.com.br/sso/oauth2/authorize';
-const tokenUrl    = 'https://login.intranet.bb.com.br/sso/oauth2/access_token';
-const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo';
+const authUrl     = 'https://login.intranet.bb.com.br/sso/oauth2/authorize'
+const tokenUrl    = 'https://login.intranet.bb.com.br/sso/oauth2/access_token'
+const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo'
 
-const clientId     = process.env.CLIENT_ID;
-const clientSecret = process.env.CLIENT_SECRET;
-const redirectUri  = process.env.REDIRECT_URI; // ex: https://seu-dominio/intramural/auth/callback/bb
-const scope        = 'bbprofile'; // adapte se precisar de outros escopos
+const clientId     = process.env.CLIENT_ID
+const clientSecret = process.env.CLIENT_SECRET
+const redirectUri  = process.env.REDIRECT_URI  // ex: https://seu-dominio/auth/callback/bb
+const scope        = 'bbprofile'               // adapte se precisar
 
-// === 1) Serve sua SPA estática em /dist ===
-const distPath = path.join(__dirname, 'dist');
-app.use(express.static(distPath));
+// Caminho da sua SPA gerada em dist
+const distPath = path.join(__dirname, 'dist')
 
-// Fallback para o index.html da sua SPA (caso use router no front-end)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
+// Body parsers / cookies
+app.use(cookieParser())
 
-// === 2) Rota para iniciar o login no BB ===
+// Middleware de proteção — tudo que não for /login ou /auth/callback/* passa por aqui
+app.use((req, res, next) => {
+  if (
+    req.path === '/login' ||
+    req.path.startsWith('/auth/callback')
+  ) {
+    return next()
+  }
+  // se não existe cookie de sessão, manda para /login
+  if (!req.cookies.bb_token) {
+    return res.redirect('/login')
+  }
+  next()
+})
+
+// Rota de login — inicia o fluxo OAuth2
 app.get('/login', (req, res) => {
   const authQuery = new URLSearchParams({
     response_type: 'code',
     client_id:     clientId,
     redirect_uri:  redirectUri,
-    scope,
-  }).toString();
+    scope
+  }).toString()
+  res.redirect(`${authUrl}?${authQuery}`)
+})
 
-  // redireciona para o SSO do BB
-  res.redirect(`${authUrl}?${authQuery}`);
-});
-
-// === 3) Callback do BB ===
+// Callback do BB — aqui troca o code por token, cria cookie e redireciona para /
 app.get('/auth/callback/bb', async (req, res) => {
-  const { code } = req.query;
+  const { code } = req.query
   if (!code) {
-    return res.status(400).send('Código de autorização ausente.');
+    return res.status(400).send('Código de autorização ausente.')
   }
 
   try {
-    // 3.1) Troca o code por token
+    // Troca code por token
     const tokenResponse = await axios.post(
       tokenUrl,
       qs.stringify({
-        grant_type:    'authorization_code',
+        grant_type:   'authorization_code',
         code,
-        redirect_uri:  redirectUri,
+        redirect_uri: redirectUri
       }),
       {
         httpsAgent,
@@ -71,41 +82,43 @@ app.get('/auth/callback/bb', async (req, res) => {
           'Content-Type':  'application/x-www-form-urlencoded',
           'Authorization': 'Basic ' + Buffer
             .from(`${clientId}:${clientSecret}`)
-            .toString('base64'),
+            .toString('base64')
         }
       }
-    );
-    const accessToken = tokenResponse.data.access_token;
+    )
+    const accessToken = tokenResponse.data.access_token
 
-    // 3.2) Consulta o userinfo (se precisar gravar sessão, cookies etc)
-    const userInfoResponse = await axios.post(
-      userInfoUrl,
-      null,
-      {
-        httpsAgent,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        }
-      }
-    );
-    const userInfo = userInfoResponse.data;
+    // (opcional) buscar info do usuário
+    // await axios.post(userInfoUrl, null, {
+    //   httpsAgent,
+    //   headers: { Authorization: `Bearer ${accessToken}` }
+    // })
 
-    // Aqui você pode criar a sessão do usuário / setar cookie etc.
-    // Exemplo mínimo: setar um cookie de sessão (não seguro, apenas ilustrativo)
-    // res.cookie('bb_token', accessToken, { httpOnly: true, secure: true });
+    // Cria um cookie de sessão simples
+    res.cookie('bb_token', accessToken, {
+      httpOnly: true,
+      secure:   true,
+      sameSite: 'lax'
+    })
 
-    // === 3.3) Redireciona para a sua SPA (index.html em dist) ===
-    return res.redirect('/');
-
-  } catch (err) {
-    console.error('Erro no fluxo OAuth2:', err);
-    return res.status(500).send('Erro ao autenticar com o BB: ' + err.message);
+    // Volta para a SPA
+    res.redirect('/')
   }
-});
+  catch (err) {
+    console.error('Erro no fluxo OAuth2:', err)
+    res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
+  }
+})
+
+// Por fim, serve sua SPA em dist, na raiz
+app.use(express.static(distPath))
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
+})
 
 app.listen(port, () => {
-  console.log(`Servidor rodando em https://localhost:${port}`);
-});
+  console.log(`Servidor rodando em http://localhost:${port}`)
+})
 
 
 
@@ -126,7 +139,7 @@ app.listen(port, () => {
 
 
 
-
+=============================
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
