@@ -537,3 +537,28 @@ app.get('/auth/callback/bb', async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
+
+
+
+Dados do usuário (userinfo): {
+  nome_comissao: 'ASSIST ATEND NEG UN',
+  codigo_uor_equipe: '2544',
+  codigo_comissao: '17513',
+  chave_nome_usuario: [
+    'F0720439 ANA CARLA RODRIGUES CHAVES SERRA',
+    'F0720439 Ana Carla Rodrigues Chaves Serra'
+  ],
+  prefixo_dependencia: '240',
+  mci_usuario: '033014710',
+  display_name: 'Ana',
+  uf_dependencia: 'BA',
+  referencia_organizacional: '1OUN',
+  chave_usuario: 'F0720439',
+  codigo_uor_dependencia: '2544',
+  nome_usuario: 'Ana Carla Rodrigues Chaves Serra',
+  codigo_tipo_dependencia: '54',
+  codigo_instituicao: '1',
+  email_usuario: 'anacarlachaves@bb.com.br',
+  nomeGuerra: 'Ana Chaves',
+  updated_at: 1749608129
+}
