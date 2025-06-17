@@ -5,6 +5,137 @@ const https = require('https')
 const fs = require('fs')
 const path = require('path')
 const qs = require('qs')
+const cookieParser = require('cookie-parser')
+
+const app = express()
+const port = process.env.PORT || 3000
+
+// === HTTPS Agent com o certificado raiz ===
+const caCertPath = path.resolve(__dirname, 'certs', 'bbraiz.crt')
+const ca = fs.readFileSync(caCertPath)
+const httpsAgent = new https.Agent({ ca, rejectUnauthorized: true })
+
+// === URLs e credenciais do BB ===
+const authUrl     = 'https://login.intranet.bb.com.br/sso/oauth2/authorize'
+const tokenUrl    = 'https://login.intranet.bb.com.br/sso/oauth2/access_token'
+const userInfoUrl = 'https://login.intranet.bb.com.br/sso/oauth2/userinfo'
+
+const clientId     = process.env.CLIENT_ID
+const clientSecret = process.env.CLIENT_SECRET
+const redirectUri  = process.env.REDIRECT_URI  // ex: https://superfeira.intranet.bb.com.br/auth/callback/bb
+const scope        = 'bbprofile'
+
+// Pasta "dist" fica ao lado do server.js
+const distPath = path.join(__dirname, 'dist')
+
+// Cookie parser
+app.use(cookieParser())
+
+// Callback do BB — trata code, seta cookie e volta para "/"
+app.get('/auth/callback/bb', async (req, res) => {
+  const { code } = req.query
+  if (!code) return res.status(400).send('Código de autorização ausente.')
+
+  try {
+    // Troca code por token
+    const tokenResp = await axios.post(
+      tokenUrl,
+      qs.stringify({
+        grant_type:   'authorization_code',
+        code,
+        redirect_uri: redirectUri
+      }),
+      {
+        httpsAgent,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' +
+            Buffer.from(${clientId}:${clientSecret}).toString('base64')
+        }
+      }
+    )
+    const accessToken = tokenResp.data.access_token
+
+    // Opcional: buscar userinfo
+    await axios.post(userInfoUrl, null, {
+      httpsAgent,
+      headers: { Authorization: Bearer ${accessToken} }
+    })
+
+    // Seta cookie e redireciona para raiz
+    res.cookie('bb_token', accessToken, {
+      httpOnly: true,
+      secure:   true,
+      sameSite: 'lax'
+    })
+    return res.redirect('/')
+  }
+  catch (err) {
+    console.error('Erro no OAuth2:', err)
+    return res.status(500).send('Erro ao autenticar com o BB: ' + err.message)
+  }
+})
+
+// Middleware de proteção — antes de servir qualquer arquivo
+app.use((req, res, next) => {
+  // permite o callback passar
+  if (req.path === '/auth/callback/bb') return next()
+  // se não tiver cookie, manda direto pro SSO
+  if (!req.cookies.bb_token) {
+    const authQuery = new URLSearchParams({
+      response_type: 'code',
+      client_id:     clientId,
+      redirect_uri:  redirectUri,
+      scope
+    }).toString()
+    return res.redirect(${authUrl}?${authQuery})
+  }
+  next()
+})
+
+// Serve sua SPA (index.html + assets) direto da pasta dist, na raiz
+app.use(express.static(distPath))
+
+app.listen(port, () => {
+  console.log(Servidor rodando em http://localhost:${port})
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+require('dotenv').config()
+const express = require('express')
+const axios = require('axios')
+const https = require('https')
+const fs = require('fs')
+const path = require('path')
+const qs = require('qs')
 
 const app = express()
 const port = process.env.PORT || 3000
