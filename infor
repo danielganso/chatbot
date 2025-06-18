@@ -1,1 +1,139 @@
-"<!DOCTYPE html>\n<!--\n * The contents of this file are subject to the terms of the Common Development and\n * Distribution License (the License). You may not use this file except in compliance with the\n * License.\n *\n * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the\n * specific language governing permission and limitations under the License.\n *\n * When distributing Covered Software, include this CDDL Header Notice in each file and include\n * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL\n * Header, with the fields enclosed by brackets [] replaced by your own identifying\n * information: \"Portions copyright [year] [name of copyright owner]\".\n *\n * Copyright 2012-2019 ForgeRock AS. All Rights Reserved\n-->\n<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n        <title>Banco do Brasil</title>\n        <script src=\"./themes/pj/bblogin/jquery-2.1.1.js\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/init_ofd.js\" charset=\"utf-8\"></script>\n        <!--<script src=\"https://bb-hmg.dnofd.com/ofdb/OFDB.js\" charset=\"utf-8\"></script>-->\n        \n    </head>\n    <!--[if IE 9]>\n    <body style=\"display:none\" class=\"ie9\">\n    <![endif]-->\n    <!--[if (gt IE 9)|!(IE)]><!-->\n    <body style=\"display:none\">\n    <!--<![endif]-->\n        <div id=\"messages\" class=\"clearfix\"></div>\n        <div id=\"wrapper\">Loading...</div>\n        <footer id=\"footer\" class=\"footer text-muted\"></footer>\n        <div id=\"dialog\"></div>\n\n\n        <script type=\"text/javascript\" src=\"themes/interno/js/util.js\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/biometriaUtil-v2_1.js\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/apibiometria-v2.js\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/biometriaUtil.js\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/apibiometria.js\"></script>\n\n        <script type=\"text/javascript\" src=\"themes/interno/js/ofdb_src_v2.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/sha256.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/tmx.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"themes/interno/js/ofd.js\" charset=\"utf-8\"></script>\n    <script type=\"text/javascript\" src=\"main.bac573fb8b.js\"></script></body>\n</html>\n"
+],
+    "colunasGrupos": [
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_1",
+        "fim": "pont_metrica_1",
+        "titulo": "Desembolso Consig (Sem INSS)"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_10",
+        "fim": "pont_metrica_10",
+        "titulo": "Seguros Rurais PF"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_11",
+        "fim": "pont_metrica_11",
+        "titulo": "Tarifas de Mercap"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_2",
+        "fim": "pont_metrica_2",
+        "titulo": "Desembolso Nao Consig"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_3",
+        "fim": "pont_metrica_3",
+        "titulo": "Desembolso Recebíveis"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_4",
+        "fim": "pont_metrica_4",
+        "titulo": "Desembolso Recebíveis - Novos <br/>"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_5",
+        "fim": "pont_metrica_5",
+        "titulo": "Rende Fácil"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_6",
+        "fim": "pont_metrica_6",
+        "titulo": "Consórcio (PF e PJ)"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_7",
+        "fim": "pont_metrica_7",
+        "titulo": "Prestamista PF"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_8",
+        "fim": "pont_metrica_8",
+        "titulo": "Capitalização PF"
+      },
+      {
+        "paginaId": 9086,
+        "inicio": "atg_metrica_9",
+        "fim": "pont_metrica_9",
+        "titulo": "Seguros PJ - Vida + Patrimônio"
+      }
+    ]
+  },
+
+
+ [
+          4231,
+          "BARREIRINHAS",
+          13,
+          "3",
+          "BA",
+          0,
+          null,
+          62.484631192,
+          92.608754331,
+          4.407575708,
+          null,
+          37.341772152,
+          92.465870029,
+          8.5493031529,
+          95.880010827,
+          120,
+          0,
+          null,
+          0,
+          21.052631579,
+          21.052631579,
+          15.789473684,
+          null,
+          15.789473684,
+          5.2631578947,
+          5.2631578947,
+          5.2631578947,
+          5.2631578947,
+          5.2631578947,
+          null,
+          0,
+          13.154659198,
+          19.496579859,
+          0.6959330065,
+          null,
+          5.8960692871,
+          4.8666247384,
+          0.4499633238,
+          5.0463163593,
+          6.3157894737,
+          0,
+          null,
+          0,
+          55.921935246
+        ],
+
+"results": [
+    {
+      "filtro": {
+        "pagina": 9086,
+        "tipo": "agencias-lojas",
+        "municipio": null,
+        "super": 8485,
+        "pepsRemovidos": false,
+        "uf": "BR",
+        "posicao": "2025-06-18 00:00:00.000",
+        "variacao": {},
+        "carteira": null,
+        "diretoria": null,
+        "vp": 8166,
+        "prefixo": null,
+        "cadastroRestritosRemovidos": false,
+        "acordo": null,
+        "nivel": null,
+        "gerev": null
+      },
