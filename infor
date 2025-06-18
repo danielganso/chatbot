@@ -1,139 +1,28 @@
-],
-    "colunasGrupos": [
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_1",
-        "fim": "pont_metrica_1",
-        "titulo": "Desembolso Consig (Sem INSS)"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_10",
-        "fim": "pont_metrica_10",
-        "titulo": "Seguros Rurais PF"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_11",
-        "fim": "pont_metrica_11",
-        "titulo": "Tarifas de Mercap"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_2",
-        "fim": "pont_metrica_2",
-        "titulo": "Desembolso Nao Consig"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_3",
-        "fim": "pont_metrica_3",
-        "titulo": "Desembolso Recebíveis"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_4",
-        "fim": "pont_metrica_4",
-        "titulo": "Desembolso Recebíveis - Novos <br/>"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_5",
-        "fim": "pont_metrica_5",
-        "titulo": "Rende Fácil"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_6",
-        "fim": "pont_metrica_6",
-        "titulo": "Consórcio (PF e PJ)"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_7",
-        "fim": "pont_metrica_7",
-        "titulo": "Prestamista PF"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_8",
-        "fim": "pont_metrica_8",
-        "titulo": "Capitalização PF"
-      },
-      {
-        "paginaId": 9086,
-        "inicio": "atg_metrica_9",
-        "fim": "pont_metrica_9",
-        "titulo": "Seguros PJ - Vida + Patrimônio"
-      }
-    ]
-  },
-
-
- [
-          4231,
-          "BARREIRINHAS",
-          13,
-          "3",
-          "BA",
-          0,
-          null,
-          62.484631192,
-          92.608754331,
-          4.407575708,
-          null,
-          37.341772152,
-          92.465870029,
-          8.5493031529,
-          95.880010827,
-          120,
-          0,
-          null,
-          0,
-          21.052631579,
-          21.052631579,
-          15.789473684,
-          null,
-          15.789473684,
-          5.2631578947,
-          5.2631578947,
-          5.2631578947,
-          5.2631578947,
-          5.2631578947,
-          null,
-          0,
-          13.154659198,
-          19.496579859,
-          0.6959330065,
-          null,
-          5.8960692871,
-          4.8666247384,
-          0.4499633238,
-          5.0463163593,
-          6.3157894737,
-          0,
-          null,
-          0,
-          55.921935246
-        ],
-
-"results": [
-    {
-      "filtro": {
-        "pagina": 9086,
-        "tipo": "agencias-lojas",
-        "municipio": null,
-        "super": 8485,
-        "pepsRemovidos": false,
-        "uf": "BR",
-        "posicao": "2025-06-18 00:00:00.000",
-        "variacao": {},
-        "carteira": null,
-        "diretoria": null,
-        "vp": 8166,
-        "prefixo": null,
-        "cadastroRestritosRemovidos": false,
-        "acordo": null,
-        "nivel": null,
-        "gerev": null
-      },
+>>> prefixoDigitado: 4496 index-3dce0df7.js:227:1816
+>>> posicao (current date): 18/06/2025 index-3dce0df7.js:227:1983
+>>> fetch status: 500 <empty string> index-3dce0df7.js:227:2181
+>>> fetch headers: 
+Array(8) [ (2) […], (2) […], (2) […], (2) […], (2) […], (2) […], (2) […], (2) […] ]
+​
+0: Array [ "content-length", "1088" ]
+​
+1: Array [ "content-security-policy", "default-src 'none'" ]
+​
+2: Array [ "content-type", "text/html; charset=utf-8" ]
+​
+3: Array [ "date", "Wed, 18 Jun 2025 14:49:32 GMT" ]
+​
+4: Array [ "server", "Microsoft-IIS/10.0" ]
+​
+5: Array [ "x-content-type-options", "nosniff" ]
+​
+6: Array [ "x-firefox-spdy", "h2" ]
+​
+7: Array [ "x-powered-by", "Express" ]
+​
+length: 8
+​
+<prototype>: Array []
+index-3dce0df7.js:227:2236
+❌ erro geral: Error: 
+    setupEventListeners https://superfeira.intranet.bb.com.br/assets/index-3dce0df7.js:227
