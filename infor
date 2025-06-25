@@ -1,35 +1,12 @@
->>> prefixoDigitado: 4496 index-3dce0df7.js:227:1816
->>> posicao (current date): 18/06/2025 index-3dce0df7.js:227:1983
->>> fetch status: 200 <empty string> index-3dce0df7.js:227:2181
->>> fetch headers: 
-Array(7) [ (2) […], (2) […], (2) […], (2) […], (2) […], (2) […], (2) […] ]
-index-3dce0df7.js:227:2236
->>> raw data: 
-Object { pagina: {…}, filtro: {…}, ssa: {…}, municipios: (9) […], favorito: false, filtroUnv: false, responsaveis: (3) […], admin: false, usuario: {…}, results: (1) […], … }
-index-3dce0df7.js:227:2374
->>> data keys: 
-Array(11) [ "pagina", "filtro", "ssa", "municipios", "favorito", "filtroUnv", "responsaveis", "admin", "usuario", "results", … ]
-index-3dce0df7.js:227:2405
->>> data.pagina: 
-Object { schema: "relatorios_8892", posicoes: (26) […], rowStyle: null, historico: true, titulo: "Mobilização Especial - Resultado - 1S25", colunas: (38) […], filtrarMatriculas: false, tabela: "mobilizacao_especial_2025_s1", atualizacao: "2025-06-18 11:22:13.054", posicao: "2025-06-18 00:00:00.000", … }
-index-3dce0df7.js:227:2450
->>> data.pagina.colunas: 
-Array(38) [ {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, … ]
-index-3dce0df7.js:227:2491
->>> data.results: 
-Array [ {…} ]
-index-3dce0df7.js:227:2567
->>> first result: 
-Object { filtro: {…}, allowdadosmci: false, data: (296) […], posicoes: {…}, cols: (44) […] }
-index-3dce0df7.js:227:2637
->>> result[0].filtro: 
-Object { pagina: 9086, tipo: "agencias-lojas", municipio: null, super: 8485, pepsRemovidos: false, uf: "BR", posicao: "2025-06-18 00:00:00.000", variacao: {}, carteira: null, diretoria: null, … }
-index-3dce0df7.js:227:2683
->>> result[0].cols: 
-Array(44) [ {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, … ]
-index-3dce0df7.js:227:2740
->>> result[0].data: 
-Array(296) [ (44) […], (44) […], (44) […], (44) […], (44) […], (44) […], (44) […], (44) […], (44) […], (44) […], … ]
-index-3dce0df7.js:227:2793
->>> comparando filtro.prefixo=null com 4496: false index-3dce0df7.js:227:3215
-❌ registro não encontrado para esse prefixo
+Senha	MCI		Prefixo/Carteira	Tipo de Carteira
+CA101	605069115	2025-06-18 11:04:20.0	4925/7002	GRUPO CTA MOV LIM
+PZ900	802345133	2025-06-18 11:06:51.0	9107/0044	EXCLUSIVO
+CA102		2025-06-18 11:16:21.0		
+PA910		2025-06-18 11:28:13.0		
+CE301	904159834	2025-06-18 11:32:27.0	2085/7002	VAREJO I
+PE910	934761103	2025-06-18 11:42:38.0	4925/7002	GRUPO POUP N CORRENT
+OP701	338713055	2025-06-18 11:56:44.0	4925/7002	USU GERENC FINANC
+CE302	511110693	2025-06-18 12:57:05.0	2085/7002	VAREJO I
+CA103	331795787	2025-06-18 13:46:42.0	4925/7002	GRUPO INADIMPLENTES
+PZ901	800068303	2025-06-18 14:41:48.0	5724/0080	EXCLUSIVO
+CA104		2025-06-18 14:52:30.0		
